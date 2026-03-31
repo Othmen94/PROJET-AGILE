@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PostOp Suivi — Application de suivi post-opératoire</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0A1628; --navy-mid: #0F2040; --blue: #1B4FD8; --blue-light: #2E6AF6;
+    --cyan: #00C2C7; --white: #F8FAFF; --grey: #8A9BB5; --card-bg: #101E38;
+    --success: #22C55E; --danger: #EF4444; --warning: #F59E0B;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--navy); color: var(--white); overflow-x: hidden; }
+
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1rem 5%; background: rgba(10,22,40,0.92); backdrop-filter: blur(14px);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .logo { display: flex; align-items: center; gap: 10px; font-family: 'DM Serif Display', serif; font-size: 1.3rem; }
+  .logo-icon { width: 34px; height: 34px; background: var(--blue); border-radius: 9px; display: flex; align-items: center; justify-content: center; }
+  .logo-icon svg { width: 18px; height: 18px; }
+  .nav-links { display: flex; gap: 2rem; list-style: none; }
+  .nav-links a { color: var(--grey); text-decoration: none; font-size: .88rem; font-weight: 500; transition: color .2s; }
+  .nav-links a:hover { color: var(--white); }
+  .nav-cta { background: var(--blue); color: #fff; border: none; padding: .55rem 1.3rem; border-radius: 8px; font-size: .88rem; font-weight: 600; cursor: pointer; transition: background .2s; }
+  .nav-cta:hover { background: var(--blue-light); }
+
+  .hero {
+    min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; text-align: center; padding: 8rem 5% 5rem;
+    position: relative; overflow: hidden;
+  }
+  .hero-grid {
+    position: absolute; inset: 0;
+    background-image: linear-gradient(rgba(27,79,216,0.07) 1px,transparent 1px),linear-gradient(90deg,rgba(27,79,216,0.07) 1px,transparent 1px);
+    background-size: 50px 50px;
+    mask-image: radial-gradient(ellipse 80% 70% at 50% 50%,black 30%,transparent 100%);
+  }
+  .hero-glow { position: absolute; width: 600px; height: 600px; background: radial-gradient(circle,rgba(27,79,216,0.22) 0%,transparent 70%); top:50%; left:50%; transform:translate(-50%,-55%); pointer-events:none; }
+  .hero-badge { display:inline-flex; align-items:center; gap:8px; background:rgba(27,79,216,0.15); border:1px solid rgba(27,79,216,0.4); border-radius:100px; padding:.4rem 1rem; font-size:.78rem; font-weight:500; color:#7AAEFF; margin-bottom:1.8rem; animation:fadeUp .7s ease both; }
+  .badge-dot { width:7px; height:7px; background:var(--cyan); border-radius:50%; }
+  .hero h1 { font-family:'DM Serif Display',serif; font-size:clamp(2.6rem,5.5vw,4.5rem); line-height:1.1; letter-spacing:-0.03em; max-width:780px; animation:fadeUp .8s .1s ease both; }
+  .hero h1 em { font-style:italic; color:var(--cyan); }
+  .hero p { margin-top:1.4rem; color:var(--grey); font-size:1.05rem; line-height:1.7; max-width:520px; animation:fadeUp .8s .2s ease both; }
+  .hero-actions { margin-top:2.2rem; display:flex; gap:1rem; flex-wrap:wrap; justify-content:center; animation:fadeUp .8s .3s ease both; }
+  .btn-primary { background:var(--blue); color:#fff; padding:.8rem 1.9rem; border-radius:10px; font-weight:600; font-size:.93rem; border:none; cursor:pointer; transition:all .2s; text-decoration:none; display:inline-block; }
+  .btn-primary:hover { background:var(--blue-light); transform:translateY(-2px); box-shadow:0 10px 28px rgba(27,79,216,0.4); }
+  .btn-outline { border:1px solid rgba(255,255,255,0.2); color:var(--white); padding:.8rem 1.9rem; border-radius:10px; font-weight:500; font-size:.93rem; background:transparent; cursor:pointer; transition:all .2s; text-decoration:none; display:inline-block; }
+  .btn-outline:hover { border-color:rgba(255,255,255,0.5); background:rgba(255,255,255,0.05); }
+
+  .stats-bar { display:flex; justify-content:center; padding:2.5rem 5%; border-top:1px solid rgba(255,255,255,0.06); border-bottom:1px solid rgba(255,255,255,0.06); background:rgba(15,32,64,0.5); }
+  .stat { flex:1; max-width:200px; text-align:center; padding:.8rem 1.5rem; border-right:1px solid rgba(255,255,255,0.08); }
+  .stat:last-child { border-right:none; }
+  .stat-num { font-family:'DM Serif Display',serif; font-size:2.2rem; color:var(--cyan); line-height:1; }
+  .stat-label { margin-top:.3rem; font-size:.8rem; color:var(--grey); }
+
+  section { padding:5rem 5%; }
+  .section-label { font-size:.75rem; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--cyan); margin-bottom:.7rem; }
+  .section-title { font-family:'DM Serif Display',serif; font-size:clamp(1.7rem,3.2vw,2.6rem); line-height:1.2; letter-spacing:-0.02em; max-width:520px; }
+  .section-sub { margin-top:.9rem; color:var(--grey); font-size:.97rem; line-height:1.7; max-width:480px; }
+
+  #fonctionnalites { background: var(--navy-mid); }
+  .feat-tabs { display:flex; gap:.6rem; margin:2.5rem 0 2rem; flex-wrap:wrap; }
+  .feat-tab { display:flex; align-items:center; gap:.5rem; padding:.6rem 1.2rem; border-radius:100px; border:1px solid rgba(255,255,255,0.1); background:transparent; color:var(--grey); font-size:.85rem; font-weight:500; cursor:pointer; transition:all .2s; font-family:'DM Sans',sans-serif; }
+  .feat-tab.active { background:var(--blue); border-color:var(--blue); color:#fff; }
+  .feat-tab:hover:not(.active) { border-color:rgba(255,255,255,0.3); color:var(--white); }
+  .feat-panels { max-width:1100px; margin:0 auto; }
+  .feat-panel { display:none; }
+  .feat-panel.active { display:grid; grid-template-columns:1fr 1fr; gap:4rem; align-items:start; }
+
+  /* ── QUESTIONNAIRE ── */
+  .q-form { background:var(--card-bg); border:1px solid rgba(255,255,255,0.08); border-radius:20px; padding:2rem; }
+  .q-form-title { font-size:1rem; font-weight:600; margin-bottom:1.5rem; }
+  .q-item { margin-bottom:1.5rem; }
+  .q-label { font-size:.85rem; color:var(--grey); margin-bottom:.7rem; display:block; }
+  .q-scale { display:flex; gap:.4rem; }
+  .q-btn { flex:1; height:36px; border-radius:8px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.04); color:var(--grey); font-size:.8rem; font-weight:600; cursor:pointer; transition:all .15s; font-family:'DM Sans',sans-serif; }
+  .q-btn:hover { border-color:var(--blue); color:var(--white); }
+  .q-btn.sel { background:var(--blue); border-color:var(--blue); color:#fff; }
+  .q-btn.sel-high { background:var(--danger); border-color:var(--danger); color:#fff; }
+  .q-toggle-row { display:flex; gap:.7rem; }
+  .q-toggle { flex:1; padding:.7rem .3rem; border-radius:10px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.04); color:var(--grey); font-size:.78rem; font-weight:500; cursor:pointer; transition:all .15s; text-align:center; font-family:'DM Sans',sans-serif; }
+  .q-toggle:hover { border-color:var(--blue); color:var(--white); }
+  .q-toggle.sel { background:rgba(27,79,216,0.25); border-color:var(--blue); color:var(--white); }
+  .q-submit { width:100%; margin-top:1.2rem; padding:.85rem; border-radius:10px; background:var(--blue); color:#fff; border:none; font-size:.93rem; font-weight:600; cursor:pointer; transition:background .2s; font-family:'DM Sans',sans-serif; }
+  .q-submit:hover { background:var(--blue-light); }
+  .q-success { display:none; text-align:center; padding:2rem; }
+  .q-success-icon { font-size:2.5rem; margin-bottom:1rem; }
+  .q-success h4 { font-size:1.1rem; margin-bottom:.4rem; }
+  .q-success p { color:var(--grey); font-size:.88rem; line-height:1.6; }
+
+  /* ── UPLOAD ── */
+  .upload-wrap { background:var(--card-bg); border:1px solid rgba(255,255,255,0.08); border-radius:20px; padding:1.8rem; }
+  .upload-zone { border:2px dashed rgba(27,79,216,0.4); border-radius:14px; padding:2.2rem 1.5rem; text-align:center; background:rgba(27,79,216,0.05); cursor:pointer; transition:all .2s; position:relative; }
+  .upload-zone:hover,.upload-zone.dragover { border-color:var(--blue); background:rgba(27,79,216,0.12); }
+  .upload-zone input[type=file] { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+  .upload-icon { font-size:2.2rem; margin-bottom:.7rem; }
+  .upload-zone p { color:var(--grey); font-size:.85rem; line-height:1.6; }
+  .upload-zone strong { color:var(--white); }
+  .upload-preview { display:none; margin-top:1.2rem; }
+  .upload-preview img { width:100%; max-height:190px; object-fit:cover; border-radius:10px; }
+  .upload-info { display:flex; align-items:center; gap:.7rem; margin-top:.7rem; padding:.7rem 1rem; background:rgba(34,197,94,0.1); border:1px solid rgba(34,197,94,0.3); border-radius:9px; }
+  .upload-info span { font-size:.82rem; color:#86EFAC; }
+  .upload-send { width:100%; margin-top:.7rem; padding:.78rem; border-radius:10px; background:var(--success); color:#fff; border:none; font-size:.88rem; font-weight:600; cursor:pointer; transition:background .2s; display:none; font-family:'DM Sans',sans-serif; }
+  .upload-send:hover { background:#16A34A; }
+  .upload-sent { display:none; text-align:center; padding:1.4rem; background:rgba(34,197,94,0.08); border:1px solid rgba(34,197,94,0.25); border-radius:14px; margin-top:1rem; }
+  .upload-sent p { color:#86EFAC; font-size:.88rem; line-height:1.6; }
+
+  /* ── ALERTES ── */
+  .alerts-panel { background:var(--card-bg); border:1px solid rgba(255,255,255,0.08); border-radius:20px; padding:1.5rem; }
+  .alert-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.2rem; }
+  .alert-header h3 { font-size:.93rem; font-weight:600; }
+  .alert-live { display:flex; align-items:center; gap:.4rem; font-size:.72rem; color:var(--success); }
+  .live-dot { width:7px; height:7px; background:var(--success); border-radius:50%; animation:pulse 1.5s infinite; }
+  .alert-item { display:flex; align-items:flex-start; gap:.8rem; padding:.85rem; border-radius:11px; margin-bottom:.6rem; border:1px solid transparent; }
+  .alert-item.danger { background:rgba(239,68,68,0.1); border-color:rgba(239,68,68,0.25); }
+  .alert-item.warning { background:rgba(245,158,11,0.1); border-color:rgba(245,158,11,0.25); }
+  .alert-item.ok { background:rgba(34,197,94,0.08); border-color:rgba(34,197,94,0.2); }
+  .adot { width:9px; height:9px; border-radius:50%; flex-shrink:0; margin-top:4px; }
+  .adot.danger { background:var(--danger); }
+  .adot.warning { background:var(--warning); }
+  .adot.ok { background:var(--success); }
+  .alert-text { flex:1; }
+  .alert-text strong { font-size:.83rem; display:block; margin-bottom:.2rem; }
+  .alert-text span { font-size:.77rem; color:var(--grey); }
+  .alert-time { font-size:.72rem; color:var(--grey); white-space:nowrap; }
+  .alert-send-btn { width:100%; margin-top:.5rem; padding:.72rem; border-radius:10px; background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.4); color:#FCA5A5; font-size:.83rem; font-weight:600; cursor:pointer; transition:all .2s; font-family:'DM Sans',sans-serif; }
+  .alert-send-btn:hover { background:rgba(239,68,68,0.25); }
+  .alert-sent-msg { display:none; text-align:center; padding:.65rem; background:rgba(34,197,94,0.1); border-radius:9px; color:#86EFAC; font-size:.82rem; margin-top:.5rem; }
+  .simulate-btn { width:100%; margin-top:.8rem; padding:.68rem; border-radius:10px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:var(--grey); font-size:.8rem; cursor:pointer; transition:all .2s; font-family:'DM Sans',sans-serif; }
+  .simulate-btn:hover { background:rgba(255,255,255,0.1); color:var(--white); }
+
+  /* ── PLANNING ── */
+  .planning-panel { background:var(--card-bg); border:1px solid rgba(255,255,255,0.08); border-radius:20px; padding:1.5rem; }
+  .planning-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.2rem; }
+  .planning-date { font-size:.78rem; color:var(--grey); margin-top:.15rem; }
+  .planning-add { background:var(--blue); border:none; color:#fff; width:28px; height:28px; border-radius:8px; font-size:1.3rem; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .2s; line-height:1; }
+  .planning-add:hover { background:var(--blue-light); }
+  .planning-item { display:flex; align-items:center; gap:.9rem; padding:.75rem .9rem; border-radius:11px; margin-bottom:.5rem; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); transition:all .2s; }
+  .planning-item.done { opacity:.5; }
+  .planning-item.done .pi-name { text-decoration:line-through; color:var(--grey); }
+  .pi-time { font-size:.74rem; color:var(--cyan); font-weight:600; min-width:38px; }
+  .pi-icon { font-size:1rem; }
+  .pi-name { flex:1; font-size:.86rem; }
+  .pi-check { width:22px; height:22px; border-radius:6px; border:1.5px solid rgba(255,255,255,0.2); background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .2s; flex-shrink:0; }
+  .pi-check.done { background:var(--success); border-color:var(--success); }
+  .check-icon { display:none; }
+  .pi-check.done .check-icon { display:block; }
+  .add-form { display:none; margin-top:.8rem; padding:.9rem; background:rgba(27,79,216,0.1); border:1px solid rgba(27,79,216,0.25); border-radius:11px; }
+  .add-row { display:flex; gap:.5rem; }
+  .add-input { flex:1; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:.52rem .75rem; color:var(--white); font-size:.82rem; font-family:'DM Sans',sans-serif; outline:none; }
+  .add-input:focus { border-color:var(--blue); }
+  .add-input::placeholder { color:var(--grey); }
+  .add-confirm { background:var(--blue); border:none; color:#fff; padding:.52rem 1rem; border-radius:8px; font-size:.82rem; font-weight:600; cursor:pointer; transition:background .2s; font-family:'DM Sans',sans-serif; white-space:nowrap; }
+  .add-confirm:hover { background:var(--blue-light); }
+
+  /* ── TEAM ── */
+  #equipe { background:var(--navy-mid); }
+  .team-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1.4rem; margin-top:2.5rem; max-width:800px; }
+  .team-card { background:var(--card-bg); border:1px solid rgba(255,255,255,0.07); border-radius:18px; padding:1.8rem; text-align:center; transition:transform .25s; }
+  .team-card:hover { transform:translateY(-4px); }
+  .avatar { width:64px; height:64px; border-radius:50%; margin:0 auto 1rem; display:flex; align-items:center; justify-content:center; font-family:'DM Serif Display',serif; font-size:1.3rem; }
+  .av-blue { background:linear-gradient(135deg,var(--blue),var(--blue-light)); }
+  .av-cyan { background:linear-gradient(135deg,#00868A,var(--cyan)); }
+  .av-indigo { background:linear-gradient(135deg,#3B1FD8,#7A5FFF); }
+  .team-name { font-size:.95rem; font-weight:600; margin-bottom:.3rem; }
+  .team-role { font-size:.72rem; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--cyan); padding:.2rem .7rem; border-radius:100px; background:rgba(0,194,199,0.1); display:inline-block; }
+
+  footer { background:#060E1C; border-top:1px solid rgba(255,255,255,0.06); padding:2.5rem 5%; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem; }
+  .footer-logo { font-family:'DM Serif Display',serif; font-size:1.1rem; margin-bottom:.3rem; }
+  .footer-sub { font-size:.82rem; color:var(--grey); }
+  .footer-badges { display:flex; gap:.5rem; margin-top:.8rem; flex-wrap:wrap; }
+  .footer-badge { font-size:.7rem; font-weight:600; padding:.2rem .65rem; border-radius:100px; border:1px solid rgba(255,255,255,0.1); color:var(--grey); }
+
+  .reveal { opacity:0; transform:translateY(20px); transition:opacity .7s ease,transform .7s ease; }
+  .reveal.visible { opacity:1; transform:translateY(0); }
+  .feat-info-list { list-style:none; display:flex; flex-direction:column; gap:.6rem; }
+  .feat-info-list li { display:flex; align-items:center; gap:.7rem; font-size:.88rem; color:var(--grey); }
+  .feat-info-list li span.check { color:var(--cyan); font-style:normal; }
+
+  @keyframes fadeUp { from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);} }
+  @keyframes pulse { 0%,100%{opacity:1;}50%{opacity:.3;} }
+  @keyframes slideIn { from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);} }
+  .slide-in { animation:slideIn .3s ease both; }
+
+  @media(max-width:900px){
+    .feat-panel.active{grid-template-columns:1fr;gap:2rem;}
+    .team-grid{grid-template-columns:1fr 1fr;}
+    .nav-links{display:none;}
+    .stats-bar{flex-wrap:wrap;}
+    .stat{border-right:none;border-bottom:1px solid rgba(255,255,255,0.08);}
+  }
+  @media(max-width:540px){.team-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">
+    <div class="logo-icon">
+      <svg fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+      </svg>
+    </div>
+    PostOp Suivi
+  </div>
+  <ul class="nav-links">
+    <li><a href="#fonctionnalites">Fonctionnalités</a></li>
+    <li><a href="#equipe">Équipe</a></li>
+  </ul>
+  <button class="nav-cta" onclick="document.getElementById('fonctionnalites').scrollIntoView({behavior:'smooth'})">Essayer →</button>
+</nav>
+
+<section class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-badge"><span class="badge-dot"></span>Équipe 7 · EPISEN / UPEC</div>
+  <h1>Le suivi post-opératoire<br>réinventé <em>à domicile</em></h1>
+  <p>Une application pour réduire les réhospitalisations, renforcer le lien patient-médecin et détecter les complications avant qu'elles surviennent.</p>
+  <div class="hero-actions">
+    <a href="#fonctionnalites" class="btn-primary">Découvrir l'application</a>
+    <a href="#equipe" class="btn-outline">L'équipe</a>
+  </div>
+</section>
+
+<div class="stats-bar reveal">
+  <div class="stat"><div class="stat-num">4</div><div class="stat-label">Fonctionnalités clés</div></div>
+  <div class="stat"><div class="stat-num">24h</div><div class="stat-label">Suivi continu</div></div>
+  <div class="stat"><div class="stat-num">↓</div><div class="stat-label">Réhospitalisations</div></div>
+  <div class="stat"><div class="stat-num">🔒</div><div class="stat-label">Données RGPD</div></div>
+</div>
+
+<section id="fonctionnalites">
+  <div style="max-width:1100px;margin:0 auto;">
+    <p class="section-label reveal">Fonctionnalités</p>
+    <h2 class="section-title reveal">Tout ce dont le patient a besoin</h2>
+    <p class="section-sub reveal">Essayez chaque fonctionnalité directement ci-dessous.</p>
+
+    <div class="feat-tabs reveal">
+      <button class="feat-tab active" onclick="switchTab('questionnaire',this)">📋 Questionnaire quotidien</button>
+      <button class="feat-tab" onclick="switchTab('upload',this)">📸 Upload de photos</button>
+      <button class="feat-tab" onclick="switchTab('alertes',this)">🔔 Alertes au médecin</button>
+      <button class="feat-tab" onclick="switchTab('planning',this)">🗓️ Planning de soins</button>
+    </div>
+
+    <div class="feat-panels">
+
+      <!-- ── QUESTIONNAIRE ── -->
+      <div id="panel-questionnaire" class="feat-panel active">
+        <div>
+          <h3 style="font-family:'DM Serif Display',serif;font-size:1.7rem;margin-bottom:.8rem">Questionnaire quotidien</h3>
+          <p style="color:var(--grey);line-height:1.7;margin-bottom:1.2rem">Chaque matin, le patient répond à quelques questions sur son état. Le médecin reçoit un résumé et peut détecter toute anomalie rapidement.</p>
+          <ul class="feat-info-list">
+            <li><span class="check">✓</span> Évaluation douleur, température, fatigue</li>
+            <li><span class="check">✓</span> Détection automatique des réponses à risque</li>
+            <li><span class="check">✓</span> Historique accessible par le médecin</li>
+          </ul>
+        </div>
+        <div class="q-form">
+          <div class="q-form-title">📋 Questionnaire du jour</div>
+          <div id="q-form-inner">
+            <div class="q-item">
+              <span class="q-label">Niveau de douleur (1 = faible · 5 = intense)</span>
+              <div class="q-scale" id="scale-douleur">
+                <button class="q-btn" onclick="selectScale('douleur',1,this)">1</button>
+                <button class="q-btn" onclick="selectScale('douleur',2,this)">2</button>
+                <button class="q-btn" onclick="selectScale('douleur',3,this)">3</button>
+                <button class="q-btn" onclick="selectScale('douleur',4,this)">4</button>
+                <button class="q-btn" onclick="selectScale('douleur',5,this)">5</button>
+              </div>
+            </div>
+            <div class="q-item">
+              <span class="q-label">Température ressentie</span>
+              <div class="q-toggle-row" id="toggle-temp">
+                <button class="q-toggle" onclick="selectToggle('temp','normale',this)">🌡️ Normale</button>
+                <button class="q-toggle" onclick="selectToggle('temp','elevee',this)">🔴 Élevée</button>
+                <button class="q-toggle" onclick="selectToggle('temp','inconnue',this)">❓ Incertaine</button>
+              </div>
+            </div>
+            <div class="q-item">
+              <span class="q-label">Niveau de fatigue (1 = normal · 5 = épuisé)</span>
+              <div class="q-scale" id="scale-fatigue">
+                <button class="q-btn" onclick="selectScale('fatigue',1,this)">1</button>
+                <button class="q-btn" onclick="selectScale('fatigue',2,this)">2</button>
+                <button class="q-btn" onclick="selectScale('fatigue',3,this)">3</button>
+                <button class="q-btn" onclick="selectScale('fatigue',4,this)">4</button>
+                <button class="q-btn" onclick="selectScale('fatigue',5,this)">5</button>
+              </div>
+            </div>
+            <div class="q-item">
+              <span class="q-label">Aspect de la plaie</span>
+              <div class="q-toggle-row" id="toggle-plaie">
+                <button class="q-toggle" onclick="selectToggle('plaie','normale',this)">✅ Normale</button>
+                <button class="q-toggle" onclick="selectToggle('plaie','rougeur',this)">🔴 Rougeur</button>
+                <button class="q-toggle" onclick="selectToggle('plaie','ecoulement',this)">⚠️ Écoulement</button>
+              </div>
+            </div>
+            <button class="q-submit" onclick="submitQuestionnaire()">Envoyer au médecin →</button>
+          </div>
+          <div class="q-success" id="q-success">
+            <div class="q-success-icon">✅</div>
+            <h4>Questionnaire envoyé !</h4>
+            <p id="q-success-msg">Votre médecin a été notifié de votre état du jour.</p>
+            <button class="q-submit" style="margin-top:1.2rem" onclick="resetQuestionnaire()">Nouveau questionnaire</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── UPLOAD ── -->
+      <div id="panel-upload" class="feat-panel">
+        <div>
+          <h3 style="font-family:'DM Serif Display',serif;font-size:1.7rem;margin-bottom:.8rem">Upload de photos</h3>
+          <p style="color:var(--grey);line-height:1.7;margin-bottom:1.2rem">Le patient envoie une photo de sa plaie. Le médecin surveille ainsi la cicatrisation à distance, sans déplacement.</p>
+          <ul class="feat-info-list">
+            <li><span class="check">✓</span> Envoi sécurisé et chiffré</li>
+            <li><span class="check">✓</span> Stockage conforme RGPD</li>
+            <li><span class="check">✓</span> Historique photo accessible au médecin</li>
+          </ul>
+        </div>
+        <div class="upload-wrap">
+          <div class="upload-zone" id="upload-zone" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+            <input type="file" accept="image/*" id="file-input" onchange="onFileSelect(event)">
+            <div class="upload-icon">📷</div>
+            <p><strong>Glissez une photo ici</strong><br>ou cliquez pour sélectionner<br><span style="font-size:.73rem;display:block;margin-top:.3rem">JPG, PNG, HEIC — Max 10 Mo</span></p>
+          </div>
+          <div class="upload-preview" id="upload-preview">
+            <img id="preview-img" src="" alt="Aperçu">
+            <div class="upload-info"><span>✅</span><span id="file-name">photo.jpg</span></div>
+            <button class="upload-send" id="upload-send-btn" onclick="sendPhoto()">Envoyer au médecin →</button>
+          </div>
+          <div class="upload-sent" id="upload-sent">
+            <p>✅ Photo envoyée avec succès au Dr. Leblanc.<br>Elle sera analysée dans les prochaines heures.</p>
+            <button class="q-submit" style="margin-top:.8rem;background:var(--blue)" onclick="resetUpload()">Envoyer une autre photo</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── ALERTES ── -->
+      <div id="panel-alertes" class="feat-panel">
+        <div>
+          <h3 style="font-family:'DM Serif Display',serif;font-size:1.7rem;margin-bottom:.8rem">Alertes au médecin</h3>
+          <p style="color:var(--grey);line-height:1.7;margin-bottom:1.2rem">Dès qu'une réponse dépasse un seuil critique, une alerte est automatiquement envoyée au médecin avec le détail des symptômes.</p>
+          <ul class="feat-info-list">
+            <li><span class="check">✓</span> Seuils médicaux personnalisables</li>
+            <li><span class="check">✓</span> Notification immédiate (push & email)</li>
+            <li><span class="check">✓</span> Historique de toutes les alertes</li>
+          </ul>
+        </div>
+        <div class="alerts-panel">
+          <div class="alert-header">
+            <h3>🔔 Tableau d'alertes — Dr. Leblanc</h3>
+            <div class="alert-live"><div class="live-dot"></div>En direct</div>
+          </div>
+          <div id="alerts-list">
+            <div class="alert-item danger slide-in">
+              <div class="adot danger"></div>
+              <div class="alert-text"><strong>Marie D. — Douleur niveau 5</strong><span>Température élevée, écoulement de plaie signalé</span></div>
+              <div class="alert-time">09:14</div>
+            </div>
+            <div class="alert-item warning slide-in">
+              <div class="adot warning"></div>
+              <div class="alert-text"><strong>Jean P. — Fatigue intense</strong><span>Fatigue 4/5 depuis 2 jours consécutifs</span></div>
+              <div class="alert-time">08:52</div>
+            </div>
+            <div class="alert-item ok slide-in">
+              <div class="adot ok"></div>
+              <div class="alert-text"><strong>Sophie M. — État normal</strong><span>Tous les indicateurs dans les seuils acceptables</span></div>
+              <div class="alert-time">08:30</div>
+            </div>
+          </div>
+          <button class="alert-send-btn" id="alert-send-btn" onclick="sendAlertToDoctor()">⚡ Contacter le médecin pour Marie D.</button>
+          <div class="alert-sent-msg" id="alert-sent-msg">✅ Message envoyé au Dr. Leblanc — Réponse attendue sous 30 min.</div>
+          <button class="simulate-btn" onclick="simulateNewAlert()">+ Simuler une nouvelle alerte patient</button>
+        </div>
+      </div>
+
+      <!-- ── PLANNING ── -->
+      <div id="panel-planning" class="feat-panel">
+        <div>
+          <h3 style="font-family:'DM Serif Display',serif;font-size:1.7rem;margin-bottom:.8rem">Planning de soins</h3>
+          <p style="color:var(--grey);line-height:1.7;margin-bottom:1.2rem">Le patient visualise ses soins, médicaments et rendez-vous de la journée. Cochez les tâches accomplies ou ajoutez les vôtres.</p>
+          <ul class="feat-info-list">
+            <li><span class="check">✓</span> Rappels médicaments & soins</li>
+            <li><span class="check">✓</span> Suivi des tâches réalisées</li>
+            <li><span class="check">✓</span> Ajout de soins personnalisés</li>
+          </ul>
+        </div>
+        <div class="planning-panel">
+          <div class="planning-header">
+            <div>
+              <div style="font-size:.93rem;font-weight:600">🗓️ Planning du jour</div>
+              <div class="planning-date" id="planning-date"></div>
+            </div>
+            <button class="planning-add" onclick="toggleAddForm()" title="Ajouter un soin">+</button>
+          </div>
+          <div id="planning-list"></div>
+          <div class="add-form" id="add-form">
+            <div class="add-row">
+              <input class="add-input" id="add-time" type="time" style="max-width:90px">
+              <input class="add-input" id="add-name" type="text" placeholder="Ex : Changement pansement">
+              <button class="add-confirm" onclick="addPlanning()">Ajouter</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section id="equipe">
+  <p class="section-label reveal">Équipe 7</p>
+  <h2 class="section-title reveal">Les architectes du projet</h2>
+  <div class="team-grid">
+    <div class="team-card reveal">
+      <div class="avatar av-blue">OM</div>
+      <div class="team-name">Olivier Maxence</div>
+      <div class="team-role">Product Owner</div>
+      <p style="font-size:.82rem;color:var(--grey);margin-top:.7rem;line-height:1.5">Définit la vision produit et priorise les user stories.</p>
+    </div>
+    <div class="team-card reveal">
+      <div class="avatar av-cyan">AO</div>
+      <div class="team-name">Al Bydeoi Othmen</div>
+      <div class="team-role">Scrum Master</div>
+      <p style="font-size:.82rem;color:var(--grey);margin-top:.7rem;line-height:1.5">Facilite les sprints et lève les obstacles pour l'équipe.</p>
+    </div>
+    <div class="team-card reveal">
+      <div class="avatar av-indigo">MD</div>
+      <div class="team-name">Mah Syra Diarra</div>
+      <div class="team-role">Développeuse</div>
+      <p style="font-size:.82rem;color:var(--grey);margin-top:.7rem;line-height:1.5">Implémente les fonctionnalités et assure la qualité du code.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div>
+    <div class="footer-logo">PostOp Suivi</div>
+    <div class="footer-sub">Projet Agile — EPISEN / UPEC</div>
+    <div class="footer-badges">
+      <span class="footer-badge">RGPD</span>
+      <span class="footer-badge">Agile</span>
+      <span class="footer-badge">Équipe 7</span>
+    </div>
+  </div>
+  <div style="font-size:.8rem;color:var(--grey)">© 2026 Équipe 7 · Tous droits réservés</div>
+</footer>
+
+<script>
+// ── TABS ──
+function switchTab(id, btn) {
+  document.querySelectorAll('.feat-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.feat-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── QUESTIONNAIRE ──
+var qAnswers = {};
+function selectScale(key, val, btn) {
+  var container = document.getElementById('scale-' + key);
+  container.querySelectorAll('.q-btn').forEach(function(b){ b.classList.remove('sel','sel-high'); });
+  btn.classList.add(val >= 4 ? 'sel-high' : 'sel');
+  qAnswers[key] = val;
+}
+function selectToggle(key, val, btn) {
+  document.getElementById('toggle-' + key).querySelectorAll('.q-toggle').forEach(function(b){ b.classList.remove('sel'); });
+  btn.classList.add('sel');
+  qAnswers[key] = val;
+}
+function submitQuestionnaire() {
+  var needed = ['douleur','temp','fatigue','plaie'];
+  var missing = needed.filter(function(k){ return !qAnswers[k]; });
+  if (missing.length) { alert('Merci de répondre à toutes les questions avant d\'envoyer.'); return; }
+  var isRisk = qAnswers.douleur >= 4 || qAnswers.temp === 'elevee' || qAnswers.fatigue >= 4 || qAnswers.plaie !== 'normale';
+  document.getElementById('q-form-inner').style.display = 'none';
+  document.getElementById('q-success').style.display = 'block';
+  document.getElementById('q-success-msg').textContent = isRisk
+    ? '⚠️ Réponses à risque détectées — Le Dr. Leblanc a été alerté immédiatement.'
+    : 'Votre médecin a été notifié de votre état du jour. Tout semble normal.';
+}
+function resetQuestionnaire() {
+  qAnswers = {};
+  document.querySelectorAll('.q-btn').forEach(function(b){ b.classList.remove('sel','sel-high'); });
+  document.querySelectorAll('.q-toggle').forEach(function(b){ b.classList.remove('sel'); });
+  document.getElementById('q-form-inner').style.display = 'block';
+  document.getElementById('q-success').style.display = 'none';
+}
+
+// ── UPLOAD ──
+function onDragOver(e) { e.preventDefault(); document.getElementById('upload-zone').classList.add('dragover'); }
+function onDragLeave() { document.getElementById('upload-zone').classList.remove('dragover'); }
+function onDrop(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.remove('dragover');
+  var file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) handleFile(file);
+}
+function onFileSelect(e) { var file = e.target.files[0]; if (file) handleFile(file); }
+function handleFile(file) {
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    document.getElementById('preview-img').src = e.target.result;
+    document.getElementById('file-name').textContent = file.name;
+    document.getElementById('upload-preview').style.display = 'block';
+    document.getElementById('upload-send-btn').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+function sendPhoto() {
+  document.getElementById('upload-preview').style.display = 'none';
+  document.getElementById('upload-sent').style.display = 'block';
+}
+function resetUpload() {
+  document.getElementById('upload-sent').style.display = 'none';
+  document.getElementById('upload-preview').style.display = 'none';
+  document.getElementById('file-input').value = '';
+}
+
+// ── ALERTES ──
+var simAlerts = [
+  { level:'danger', name:'Lucas R.', msg:'Douleur niveau 5, fièvre signalée', time:'09:32' },
+  { level:'warning', name:'Emma T.', msg:'Nausées et fatigue intense depuis hier', time:'09:40' },
+  { level:'warning', name:'Paul S.', msg:'Plaie avec légère rougeur observée', time:'09:47' },
+  { level:'danger', name:'Claire M.', msg:'Température 39.2°, frissons', time:'09:55' },
+];
+var simIdx = 0;
+function sendAlertToDoctor() {
+  document.getElementById('alert-send-btn').style.display = 'none';
+  var msg = document.getElementById('alert-sent-msg');
+  msg.style.display = 'block';
+  msg.classList.add('slide-in');
+}
+function simulateNewAlert() {
+  var a = simAlerts[simIdx % simAlerts.length]; simIdx++;
+  var list = document.getElementById('alerts-list');
+  var el = document.createElement('div');
+  el.className = 'alert-item ' + a.level + ' slide-in';
+  el.innerHTML = '<div class="adot ' + a.level + '"></div><div class="alert-text"><strong>' + a.name + ' — Nouvelle alerte</strong><span>' + a.msg + '</span></div><div class="alert-time">' + a.time + '</div>';
+  list.insertBefore(el, list.firstChild);
+}
+
+// ── PLANNING ──
+var planningItems = [
+  { time:'08:00', icon:'💊', name:'Amoxicilline 500mg', done:true },
+  { time:'09:00', icon:'🩹', name:'Changement du pansement', done:true },
+  { time:'12:00', icon:'💊', name:'Paracétamol 1g', done:false },
+  { time:'14:30', icon:'🏥', name:'Consultation Dr. Leblanc', done:false },
+  { time:'20:00', icon:'💊', name:'Amoxicilline 500mg (soir)', done:false },
+];
+function renderPlanning() {
+  var d = new Date();
+  document.getElementById('planning-date').textContent = d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+  var list = document.getElementById('planning-list');
+  list.innerHTML = '';
+  planningItems.forEach(function(item, i) {
+    var el = document.createElement('div');
+    el.className = 'planning-item' + (item.done ? ' done' : '');
+    el.innerHTML =
+      '<span class="pi-time">' + item.time + '</span>' +
+      '<span class="pi-icon">' + item.icon + '</span>' +
+      '<span class="pi-name">' + item.name + '</span>' +
+      '<button class="pi-check' + (item.done ? ' done' : '') + '" onclick="toggleDone(' + i + ')" title="Marquer comme fait">' +
+        '<svg class="check-icon" width="11" height="11" fill="none" viewBox="0 0 12 12" stroke="#fff" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2 6l3 3 5-5"/></svg>' +
+      '</button>';
+    list.appendChild(el);
+  });
+}
+function toggleDone(i) { planningItems[i].done = !planningItems[i].done; renderPlanning(); }
+function toggleAddForm() {
+  var f = document.getElementById('add-form');
+  f.style.display = f.style.display === 'block' ? 'none' : 'block';
+  if (f.style.display === 'block') document.getElementById('add-name').focus();
+}
+function addPlanning() {
+  var time = document.getElementById('add-time').value;
+  var name = document.getElementById('add-name').value.trim();
+  if (!time || !name) { alert('Veuillez renseigner une heure et un nom.'); return; }
+  planningItems.push({ time:time, icon:'📌', name:name, done:false });
+  planningItems.sort(function(a,b){ return a.time.localeCompare(b.time); });
+  document.getElementById('add-time').value = '';
+  document.getElementById('add-name').value = '';
+  document.getElementById('add-form').style.display = 'none';
+  renderPlanning();
+}
+renderPlanning();
+
+// ── SCROLL REVEAL ──
+var revealObs = new IntersectionObserver(function(entries){
+  entries.forEach(function(e){ if(e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(function(el){ revealObs.observe(el); });
+</script>
+</body>
+</html>
