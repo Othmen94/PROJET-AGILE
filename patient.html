@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PostOp Suivi — Espace Patient</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--navy:#0A1628;--navy-mid:#0F2040;--blue:#1B4FD8;--blue-light:#2E6AF6;--cyan:#00C2C7;--white:#F8FAFF;--grey:#8A9BB5;--card-bg:#101E38;--success:#22C55E;--danger:#EF4444;--warning:#F59E0B;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);min-height:100vh;}
+
+  /* NAV */
+  nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:1rem 5%;background:rgba(10,22,40,0.95);backdrop-filter:blur(14px);border-bottom:1px solid rgba(255,255,255,0.06);}
+  .logo{display:flex;align-items:center;gap:9px;font-family:'DM Serif Display',serif;font-size:1.2rem;}
+  .logo-icon{width:32px;height:32px;background:var(--blue);border-radius:9px;display:flex;align-items:center;justify-content:center;}
+  .logo-icon svg{width:17px;height:17px;}
+  .nav-right{display:flex;align-items:center;gap:1rem;}
+  .nav-user{font-size:.83rem;color:var(--grey);display:none;}
+  .nav-user span{color:var(--cyan);font-weight:600;}
+  .nav-btn{color:var(--grey);text-decoration:none;font-size:.83rem;padding:.4rem .9rem;border-radius:7px;border:1px solid rgba(255,255,255,0.1);cursor:pointer;background:transparent;font-family:'DM Sans',sans-serif;transition:all .2s;}
+  .nav-btn:hover{color:var(--white);border-color:rgba(255,255,255,0.3);}
+  .nav-btn.danger{border-color:rgba(239,68,68,0.3);color:#FCA5A5;}
+  .nav-btn.danger:hover{background:rgba(239,68,68,0.1);}
+
+  .main{max-width:860px;margin:0 auto;padding:6rem 2rem 4rem;}
+
+  /* AUTH PAGES */
+  .auth-wrap{display:flex;align-items:center;justify-content:center;min-height:90vh;}
+  .auth-card{background:var(--card-bg);border:1px solid rgba(255,255,255,0.08);border-radius:24px;padding:2.5rem;max-width:440px;width:100%;}
+  .auth-logo{text-align:center;margin-bottom:1.8rem;}
+  .auth-logo div{font-family:'DM Serif Display',serif;font-size:1.6rem;margin-top:.5rem;}
+  .auth-logo p{color:var(--grey);font-size:.85rem;margin-top:.3rem;}
+  .auth-tabs{display:flex;gap:.5rem;margin-bottom:1.8rem;background:rgba(255,255,255,0.04);border-radius:12px;padding:.3rem;}
+  .auth-tab{flex:1;padding:.6rem;border-radius:9px;border:none;background:transparent;color:var(--grey);font-size:.87rem;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
+  .auth-tab.active{background:var(--blue);color:#fff;}
+  .field-group{margin-bottom:1.1rem;}
+  .field-label{font-size:.8rem;color:var(--grey);margin-bottom:.45rem;display:block;}
+  .field-input{width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:.78rem 1rem;color:var(--white);font-size:.9rem;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s;}
+  .field-input:focus{border-color:var(--blue);}
+  .field-input::placeholder{color:var(--grey);}
+  .field-row{display:flex;gap:.7rem;}
+  .submit-btn{width:100%;padding:.85rem;border-radius:10px;background:var(--blue);color:#fff;border:none;font-size:.93rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .2s;margin-top:.5rem;}
+  .submit-btn:hover{background:var(--blue-light);}
+  .submit-btn:disabled{opacity:.5;cursor:not-allowed;}
+  .msg-box{display:none;padding:.85rem 1rem;border-radius:10px;font-size:.85rem;margin-top:.8rem;text-align:center;line-height:1.5;}
+  .msg-box.success{background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);color:#86EFAC;}
+  .msg-box.error{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#FCA5A5;}
+  .msg-box.warning{background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);color:#FDE68A;}
+
+  /* CODE VERIFICATION */
+  .code-inputs{display:flex;gap:.5rem;justify-content:center;margin:1.2rem 0;}
+  .code-input{width:46px;height:56px;text-align:center;font-size:1.4rem;font-weight:700;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:10px;color:var(--white);font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s;}
+  .code-input:focus{border-color:var(--blue);}
+  .resend-link{text-align:center;margin-top:.8rem;font-size:.82rem;color:var(--grey);}
+  .resend-link button{background:none;border:none;color:var(--cyan);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.82rem;text-decoration:underline;}
+
+  /* APP */
+  .app-content{display:none;}
+  .greeting{margin-bottom:2rem;}
+  .greeting h1{font-family:'DM Serif Display',serif;font-size:1.9rem;margin-bottom:.3rem;}
+  .greeting p{color:var(--grey);font-size:.88rem;}
+  .tabs{display:flex;gap:.5rem;margin-bottom:1.5rem;flex-wrap:wrap;}
+  .tab{padding:.58rem 1.1rem;border-radius:100px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:var(--grey);font-size:.82rem;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
+  .tab.active{background:var(--blue);border-color:var(--blue);color:#fff;}
+  .tab:hover:not(.active){border-color:rgba(255,255,255,0.3);color:var(--white);}
+  .panel{display:none;}
+  .panel.active{display:block;}
+
+  /* CARDS */
+  .card{background:var(--card-bg);border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:1.7rem;margin-bottom:1.2rem;}
+  .card-title{font-size:.98rem;font-weight:600;margin-bottom:1.3rem;}
+  .fl{font-size:.82rem;color:var(--grey);margin-bottom:.55rem;display:block;}
+  .fi{margin-bottom:1.2rem;}
+
+  /* SCALE */
+  .scale{display:flex;gap:.4rem;}
+  .sb{flex:1;height:38px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:var(--grey);font-size:.82rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;}
+  .sb:hover{border-color:var(--blue);color:var(--white);}
+  .sb.sel{background:var(--blue);border-color:var(--blue);color:#fff;}
+  .sb.sel-high{background:var(--danger);border-color:var(--danger);color:#fff;}
+
+  /* TOGGLE */
+  .tr{display:flex;gap:.6rem;flex-wrap:wrap;}
+  .tb{flex:1;min-width:90px;padding:.65rem .3rem;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:var(--grey);font-size:.78rem;font-weight:500;cursor:pointer;text-align:center;font-family:'DM Sans',sans-serif;transition:all .15s;}
+  .tb:hover{border-color:var(--blue);color:var(--white);}
+  .tb.sel{background:rgba(27,79,216,0.25);border-color:var(--blue);color:var(--white);}
+
+  .sub-btn{width:100%;padding:.82rem;border-radius:10px;background:var(--blue);color:#fff;border:none;font-size:.92rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .2s;margin-top:.5rem;}
+  .sub-btn:hover{background:var(--blue-light);}
+  .sub-btn:disabled{opacity:.5;cursor:not-allowed;}
+
+  /* UPLOAD */
+  .upload-zone{border:2px dashed rgba(27,79,216,0.4);border-radius:14px;padding:2rem;text-align:center;background:rgba(27,79,216,0.05);cursor:pointer;transition:all .2s;position:relative;margin-bottom:1rem;}
+  .upload-zone:hover,.upload-zone.over{border-color:var(--blue);background:rgba(27,79,216,0.12);}
+  .upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+  .preview-img{width:100%;max-height:200px;object-fit:cover;border-radius:10px;margin-bottom:.8rem;display:none;}
+  .textarea{width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:.8rem 1rem;color:var(--white);font-size:.87rem;font-family:'DM Sans',sans-serif;outline:none;resize:vertical;min-height:100px;}
+  .textarea:focus{border-color:var(--blue);}
+  .textarea::placeholder{color:var(--grey);}
+
+  /* PLANNING */
+  .pi{display:flex;align-items:center;gap:.8rem;padding:.72rem .9rem;border-radius:11px;margin-bottom:.5rem;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);}
+  .pi.fait{opacity:.5;}
+  .pi.fait .pi-name{text-decoration:line-through;color:var(--grey);}
+  .pi-time{font-size:.73rem;color:var(--cyan);font-weight:600;min-width:38px;}
+  .pi-icon{font-size:1rem;}
+  .pi-name{flex:1;font-size:.85rem;}
+  .pi-check{width:22px;height:22px;border-radius:6px;border:1.5px solid rgba(255,255,255,0.2);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;}
+  .pi-check.fait{background:var(--success);border-color:var(--success);}
+  .add-row{display:flex;gap:.5rem;margin-top:.8rem;}
+  .add-input{flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:.52rem .75rem;color:var(--white);font-size:.82rem;font-family:'DM Sans',sans-serif;outline:none;}
+  .add-input:focus{border-color:var(--blue);}
+  .add-input::placeholder{color:var(--grey);}
+  .add-btn{background:var(--blue);border:none;color:#fff;padding:.52rem 1rem;border-radius:8px;font-size:.82rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;}
+  .add-btn:hover{background:var(--blue-light);}
+
+  .spinner{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;margin-right:5px;vertical-align:middle;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+  .fade-in{animation:fadeIn .4s ease both;}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">
+    <div class="logo-icon">
+      <svg fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+      </svg>
+    </div>
+    PostOp Suivi
+  </div>
+  <div class="nav-right">
+    <div class="nav-user" id="nav-user">Bonjour, <span id="nav-name"></span></div>
+    <a href="/medecin.html" class="nav-btn"> Médecin</a>
+    <button class="nav-btn danger" id="logout-btn" style="display:none" onclick="logout()">Déconnexion</button>
+  </div>
+</nav>
+
+<div class="main">
+
+  <!-- ══ AUTH ══ -->
+  <div class="auth-wrap fade-in" id="auth-section">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <div style="font-size:2rem"></div>
+        <div>PostOp Suivi</div>
+        <p>Suivi post-opératoire à domicile</p>
+      </div>
+
+      <!-- TABS connexion / inscription -->
+      <div class="auth-tabs" id="auth-tabs">
+        <button class="auth-tab active" onclick="showAuthTab('login')">Se connecter</button>
+        <button class="auth-tab" onclick="showAuthTab('register')">Créer un compte</button>
+      </div>
+
+      <!-- CONNEXION -->
+      <div id="form-login">
+        <div class="field-group">
+          <span class="field-label">Adresse email</span>
+          <input class="field-input" id="login-email" type="email" placeholder="votre@email.com" autocomplete="email">
+        </div>
+        <div class="field-group">
+          <span class="field-label">Mot de passe</span>
+          <input class="field-input" id="login-password" type="password" placeholder="••••••••" autocomplete="current-password">
+        </div>
+        <button class="submit-btn" id="login-btn" onclick="doLogin()">Se connecter</button>
+        <div class="msg-box" id="login-msg"></div>
+      </div>
+
+      <!-- INSCRIPTION -->
+      <div id="form-register" style="display:none">
+        <div class="field-row">
+          <div class="field-group" style="flex:1">
+            <span class="field-label">Prénom</span>
+            <input class="field-input" id="reg-prenom" type="text" placeholder="Marie" autocomplete="given-name">
+          </div>
+          <div class="field-group" style="flex:1">
+            <span class="field-label">Nom</span>
+            <input class="field-input" id="reg-nom" type="text" placeholder="Dupont" autocomplete="family-name">
+          </div>
+        </div>
+        <div class="field-group">
+          <span class="field-label">Adresse email</span>
+          <input class="field-input" id="reg-email" type="email" placeholder="votre@email.com" autocomplete="email">
+        </div>
+        <div class="field-group">
+          <span class="field-label">Mot de passe</span>
+          <input class="field-input" id="reg-password" type="password" placeholder="Minimum 6 caractères" autocomplete="new-password">
+        </div>
+        <button class="submit-btn" id="register-btn" onclick="doRegister()">Créer mon compte →</button>
+        <div class="msg-box" id="register-msg"></div>
+      </div>
+
+      <!-- VÉRIFICATION CODE -->
+      <div id="form-verify" style="display:none">
+        <div style="text-align:center;margin-bottom:1.2rem">
+          <div style="font-size:2rem;margin-bottom:.5rem">📧</div>
+          <p style="font-size:.9rem;color:var(--grey);line-height:1.6">Un code à 6 chiffres a été envoyé à<br><strong id="verify-email-display" style="color:var(--white)"></strong></p>
+        </div>
+        <div class="code-inputs">
+          <input class="code-input" id="c0" maxlength="1" type="text" inputmode="numeric">
+          <input class="code-input" id="c1" maxlength="1" type="text" inputmode="numeric">
+          <input class="code-input" id="c2" maxlength="1" type="text" inputmode="numeric">
+          <input class="code-input" id="c3" maxlength="1" type="text" inputmode="numeric">
+          <input class="code-input" id="c4" maxlength="1" type="text" inputmode="numeric">
+          <input class="code-input" id="c5" maxlength="1" type="text" inputmode="numeric">
+        </div>
+        <button class="submit-btn" id="verify-btn" onclick="doVerify()">Vérifier le code</button>
+        <div class="msg-box" id="verify-msg"></div>
+        <div class="resend-link">Pas reçu ? <button onclick="doRegister()">Renvoyer le code</button></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══ APP ══ -->
+  <div class="app-content fade-in" id="app-section">
+    <div class="greeting">
+      <h1>Bonjour, <span id="greeting-name" style="color:var(--cyan)"></span> 👋</h1>
+      <p id="greeting-date"></p>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('questionnaire',this)">📋 Questionnaire</button>
+      <button class="tab" onclick="switchTab('upload',this)">📸 Photo plaie</button>
+      <button class="tab" onclick="switchTab('planning',this)">🗓️ Planning</button>
+      <button class="tab" onclick="switchTab('message',this)">💬 Message</button>
+    </div>
+
+    <!-- QUESTIONNAIRE -->
+    <div class="panel active" id="panel-questionnaire">
+      <div class="card">
+        <div class="card-title">📋 Questionnaire du jour</div>
+        <div class="fi"><span class="fl">Niveau de douleur (1 = faible · 5 = intense)</span>
+          <div class="scale" id="s-douleur">
+            <button class="sb" onclick="setScale('douleur',1,this)">1</button>
+            <button class="sb" onclick="setScale('douleur',2,this)">2</button>
+            <button class="sb" onclick="setScale('douleur',3,this)">3</button>
+            <button class="sb" onclick="setScale('douleur',4,this)">4</button>
+            <button class="sb" onclick="setScale('douleur',5,this)">5</button>
+          </div>
+        </div>
+        <div class="fi"><span class="fl">Température ressentie</span>
+          <div class="tr" id="t-temp">
+            <button class="tb" onclick="setToggle('temp','normale',this)">Normale</button>
+            <button class="tb" onclick="setToggle('temp','elevee',this)"> Élevée</button>
+            <button class="tb" onclick="setToggle('temp','inconnue',this)"> Incertaine</button>
+          </div>
+        </div>
+        <div class="fi"><span class="fl">Niveau de fatigue (1 = normal · 5 = épuisé)</span>
+          <div class="scale" id="s-fatigue">
+            <button class="sb" onclick="setScale('fatigue',1,this)">1</button>
+            <button class="sb" onclick="setScale('fatigue',2,this)">2</button>
+            <button class="sb" onclick="setScale('fatigue',3,this)">3</button>
+            <button class="sb" onclick="setScale('fatigue',4,this)">4</button>
+            <button class="sb" onclick="setScale('fatigue',5,this)">5</button>
+          </div>
+        </div>
+        <div class="fi"><span class="fl">Aspect de la plaie</span>
+          <div class="tr" id="t-plaie">
+            <button class="tb" onclick="setToggle('plaie','normale',this)">✅ Normale</button>
+            <button class="tb" onclick="setToggle('plaie','rougeur',this)">🔴 Rougeur</button>
+            <button class="tb" onclick="setToggle('plaie','ecoulement',this)">⚠️ Écoulement</button>
+          </div>
+        </div>
+        <button class="sub-btn" id="q-btn" onclick="submitQ()">Envoyer au médecin →</button>
+        <div class="msg-box" id="q-msg"></div>
+      </div>
+    </div>
+
+    <!-- UPLOAD -->
+    <div class="panel" id="panel-upload">
+      <div class="card">
+        <div class="card-title">📸 Envoyer une photo de ma plaie</div>
+        <img class="preview-img" id="preview-img" src="" alt="Aperçu">
+        <div class="upload-zone" id="upload-zone" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFile(event)">
+          <input type="file" accept="image/*" id="file-input" onchange="fileSelected(event)">
+          <div style="font-size:2rem;margin-bottom:.5rem">📷</div>
+          <p style="color:var(--grey);font-size:.85rem;line-height:1.6"><strong style="color:var(--white)">Glissez une photo ici</strong><br>ou cliquez pour sélectionner<br><span style="font-size:.75rem">JPG · PNG · HEIC — Max 10 Mo</span></p>
+        </div>
+        <div class="fi"><span class="fl">Commentaire (facultatif)</span>
+          <textarea class="textarea" id="photo-msg-input" placeholder="Ex : La plaie semble rouge depuis ce matin..."></textarea>
+        </div>
+        <button class="sub-btn" id="photo-btn" onclick="submitPhoto()">Envoyer la photo →</button>
+        <div class="msg-box" id="photo-msg"></div>
+      </div>
+    </div>
+
+    <!-- PLANNING -->
+    <div class="panel" id="panel-planning">
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem">
+          <div class="card-title" style="margin:0">🗓️ Mon planning du jour</div>
+          <button class="add-btn" onclick="toggleAddForm()">+ Ajouter</button>
+        </div>
+        <div id="planning-list"><p style="color:var(--grey);font-size:.85rem;text-align:center;padding:1.5rem 0">Chargement…</p></div>
+        <div id="add-form" style="display:none;margin-top:.8rem;padding:.9rem;background:rgba(27,79,216,0.08);border:1px solid rgba(27,79,216,0.2);border-radius:11px">
+          <div class="add-row">
+            <input class="add-input" type="time" id="add-time" style="max-width:88px">
+            <input class="add-input" type="text" id="add-nom" placeholder="Nom du soin ou rappel">
+            <button class="add-btn" onclick="addSoin()">OK</button>
+          </div>
+        </div>
+        <div class="msg-box" id="planning-msg"></div>
+      </div>
+    </div>
+
+    <!-- MESSAGE -->
+    <div class="panel" id="panel-message">
+      <div class="card">
+        <div class="card-title">💬 Envoyer un message au médecin</div>
+        <div class="fi"><span class="fl">Votre message</span>
+          <textarea class="textarea" id="msg-contenu" placeholder="Ex : Ma cicatrice est plus douloureuse depuis hier soir..." style="min-height:130px"></textarea>
+        </div>
+        <button class="sub-btn" id="msg-btn" onclick="submitMsg()">Envoyer →</button>
+        <div class="msg-box" id="msg-box"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+var API = 'http://localhost:3000/api';
+var currentUser = null;
+var qAnswers = {};
+var selectedFile = null;
+var pendingEmail = '';
+
+// ── TOKEN ──
+function getToken() { return localStorage.getItem('postop_token'); }
+function setToken(t) { localStorage.setItem('postop_token', t); }
+function clearToken() { localStorage.removeItem('postop_token'); }
+
+function authHeaders() {
+  return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() };
+}
+
+// ── AUTO LOGIN ──
+async function autoLogin() {
+  var token = getToken();
+  if (!token) return showAuth();
+  try {
+    var res = await fetch(API + '/auth/me', { headers: { 'Authorization': 'Bearer ' + token } });
+    if (!res.ok) { clearToken(); return showAuth(); }
+    var data = await res.json();
+    currentUser = data.user;
+    showApp();
+  } catch(e) { showAuth(); }
+}
+
+function showAuth() {
+  document.getElementById('auth-section').style.display = 'flex';
+  document.getElementById('app-section').style.display = 'none';
+  document.getElementById('nav-user').style.display = 'none';
+  document.getElementById('logout-btn').style.display = 'none';
+}
+
+function showApp() {
+  document.getElementById('auth-section').style.display = 'none';
+  document.getElementById('app-section').style.display = 'block';
+  document.getElementById('nav-user').style.display = 'flex';
+  document.getElementById('logout-btn').style.display = 'block';
+  document.getElementById('nav-name').textContent = currentUser.prenom + ' ' + currentUser.nom;
+  document.getElementById('greeting-name').textContent = currentUser.prenom;
+  var d = new Date();
+  document.getElementById('greeting-date').textContent = d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  loadPlanning();
+}
+
+function logout() {
+  clearToken();
+  currentUser = null;
+  showAuth();
+}
+
+// ── AUTH TABS ──
+function showAuthTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach(function(b,i){ b.classList.toggle('active', (tab==='login'&&i===0)||(tab==='register'&&i===1)); });
+  document.getElementById('form-login').style.display = tab === 'login' ? 'block' : 'none';
+  document.getElementById('form-register').style.display = tab === 'register' ? 'block' : 'none';
+  document.getElementById('form-verify').style.display = 'none';
+}
+
+// ── MSG ──
+function showMsg(id, text, type) { var e=document.getElementById(id); e.textContent=text; e.className='msg-box '+type; e.style.display='block'; }
+function hideMsg(id) { document.getElementById(id).style.display='none'; }
+
+// ── CONNEXION ──
+async function doLogin() {
+  var email = document.getElementById('login-email').value.trim();
+  var password = document.getElementById('login-password').value;
+  if (!email || !password) { showMsg('login-msg','Remplissez tous les champs.','error'); return; }
+  var btn = document.getElementById('login-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Connexion…';
+  hideMsg('login-msg');
+  try {
+    var res = await fetch(API+'/auth/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({email, password}) });
+    var data = await res.json();
+    if (data.success) { setToken(data.token); currentUser = data.user; showApp(); }
+    else showMsg('login-msg', data.error || 'Erreur de connexion.', 'error');
+  } catch(e) { showMsg('login-msg','Serveur inaccessible.','error'); }
+  btn.disabled = false; btn.textContent = 'Se connecter';
+}
+
+// ── INSCRIPTION ──
+async function doRegister() {
+  var prenom = document.getElementById('reg-prenom').value.trim();
+  var nom = document.getElementById('reg-nom').value.trim();
+  var email = document.getElementById('reg-email').value.trim();
+  var password = document.getElementById('reg-password').value;
+  if (!prenom || !nom || !email || !password) { showMsg('register-msg','Remplissez tous les champs.','error'); return; }
+  if (password.length < 6) { showMsg('register-msg','Mot de passe trop court (6 caractères min).','error'); return; }
+  var btn = document.getElementById('register-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Envoi du code…';
+  hideMsg('register-msg');
+  try {
+    var res = await fetch(API+'/auth/register', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({prenom, nom, email, password}) });
+    var data = await res.json();
+    if (data.success) {
+      pendingEmail = email;
+      document.getElementById('form-register').style.display = 'none';
+      document.getElementById('auth-tabs').style.display = 'none';
+      document.getElementById('form-verify').style.display = 'block';
+      document.getElementById('verify-email-display').textContent = email;
+      document.getElementById('c0').focus();
+    } else showMsg('register-msg', data.error || 'Erreur.', 'error');
+  } catch(e) { showMsg('register-msg','Serveur inaccessible.','error'); }
+  btn.disabled = false; btn.textContent = 'Créer mon compte →';
+}
+
+// ── CODE INPUT NAVIGATION ──
+document.querySelectorAll('.code-input').forEach(function(input, i) {
+  input.addEventListener('input', function() {
+    this.value = this.value.replace(/[^0-9]/g,'');
+    if (this.value && i < 5) document.getElementById('c'+(i+1)).focus();
+    if (i === 5 && this.value) doVerify();
+  });
+  input.addEventListener('keydown', function(e) {
+    if (e.key === 'Backspace' && !this.value && i > 0) document.getElementById('c'+(i-1)).focus();
+  });
+});
+
+// ── VÉRIFICATION CODE ──
+async function doVerify() {
+  var code = '';
+  for (var i=0; i<6; i++) code += document.getElementById('c'+i).value;
+  if (code.length < 6) { showMsg('verify-msg','Entrez les 6 chiffres.','warning'); return; }
+  var btn = document.getElementById('verify-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Vérification…';
+  hideMsg('verify-msg');
+  try {
+    var res = await fetch(API+'/auth/verify', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({email: pendingEmail, code}) });
+    var data = await res.json();
+    if (data.success) { setToken(data.token); currentUser = data.user; showApp(); }
+    else {
+      showMsg('verify-msg', data.error || 'Code incorrect.', 'error');
+      for (var i=0; i<6; i++) document.getElementById('c'+i).value = '';
+      document.getElementById('c0').focus();
+    }
+  } catch(e) { showMsg('verify-msg','Serveur inaccessible.','error'); }
+  btn.disabled = false; btn.textContent = 'Vérifier le code';
+}
+
+// ── TABS APP ──
+function switchTab(id, btn) {
+  document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelectorAll('.tab').forEach(function(b){ b.classList.remove('active'); });
+  document.getElementById('panel-'+id).classList.add('active');
+  btn.classList.add('active');
+  if (id === 'planning') loadPlanning();
+}
+
+// ── QUESTIONNAIRE ──
+function setScale(key, val, btn) {
+  document.getElementById('s-'+key).querySelectorAll('.sb').forEach(function(b){ b.classList.remove('sel','sel-high'); });
+  btn.classList.add(val >= 4 ? 'sel-high' : 'sel');
+  qAnswers[key] = val;
+}
+function setToggle(key, val, btn) {
+  document.getElementById('t-'+key).querySelectorAll('.tb').forEach(function(b){ b.classList.remove('sel'); });
+  btn.classList.add('sel');
+  qAnswers[key] = val;
+}
+async function submitQ() {
+  if (['douleur','temp','fatigue','plaie'].some(function(k){ return !qAnswers[k]; })) {
+    showMsg('q-msg','⚠️ Répondez à toutes les questions.','warning'); return;
+  }
+  var btn = document.getElementById('q-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Envoi…';
+  hideMsg('q-msg');
+  try {
+    var res = await fetch(API+'/questionnaire', { method:'POST', headers: authHeaders(),
+      body: JSON.stringify({ douleur: qAnswers.douleur, temperature: qAnswers.temp, fatigue: qAnswers.fatigue, plaie: qAnswers.plaie }) });
+    var data = await res.json();
+    if (data.success) {
+      showMsg('q-msg', data.est_risque ? '⚠️ Réponses à risque — Le médecin a été alerté.' : '✅ Questionnaire envoyé avec succès.', data.est_risque ? 'warning' : 'success');
+      qAnswers = {};
+      document.querySelectorAll('.sb,.tb').forEach(function(b){ b.classList.remove('sel','sel-high'); });
+    } else showMsg('q-msg', data.error || 'Erreur.', 'error');
+  } catch(e) { showMsg('q-msg','❌ Serveur inaccessible.','error'); }
+  btn.disabled = false; btn.textContent = 'Envoyer au médecin →';
+}
+
+// ── UPLOAD ──
+function dragOver(e){ e.preventDefault(); document.getElementById('upload-zone').classList.add('over'); }
+function dragLeave(){ document.getElementById('upload-zone').classList.remove('over'); }
+function dropFile(e){ e.preventDefault(); dragLeave(); var f=e.dataTransfer.files[0]; if(f&&f.type.startsWith('image/')) handleFile(f); }
+function fileSelected(e){ var f=e.target.files[0]; if(f) handleFile(f); }
+function handleFile(file){
+  selectedFile = file;
+  var reader = new FileReader();
+  reader.onload = function(e){ var img=document.getElementById('preview-img'); img.src=e.target.result; img.style.display='block'; };
+  reader.readAsDataURL(file);
+}
+async function submitPhoto(){
+  if (!selectedFile){ showMsg('photo-msg','⚠️ Sélectionnez une photo.','warning'); return; }
+  var btn = document.getElementById('photo-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Envoi…';
+  hideMsg('photo-msg');
+  var form = new FormData();
+  form.append('photo', selectedFile);
+  form.append('message', document.getElementById('photo-msg-input').value.trim());
+  try {
+    var res = await fetch(API+'/photo', { method:'POST', headers:{'Authorization':'Bearer '+getToken()}, body: form });
+    var data = await res.json();
+    if (data.success){ showMsg('photo-msg','✅ Photo envoyée au médecin.','success'); selectedFile=null; document.getElementById('preview-img').style.display='none'; document.getElementById('file-input').value=''; document.getElementById('photo-msg-input').value=''; }
+    else showMsg('photo-msg', data.error||'Erreur.','error');
+  } catch(e){ showMsg('photo-msg','❌ Serveur inaccessible.','error'); }
+  btn.disabled = false; btn.textContent = 'Envoyer la photo →';
+}
+
+// ── PLANNING ──
+var planningData = [];
+async function loadPlanning(){
+  if (!currentUser) return;
+  try {
+    var res = await fetch(API+'/planning/'+encodeURIComponent(currentUser.email), { headers:{'Authorization':'Bearer '+getToken()} });
+    planningData = await res.json();
+    renderPlanning();
+  } catch(e){ renderPlanning(); }
+}
+function renderPlanning(){
+  var list = document.getElementById('planning-list');
+  if (!planningData.length){ list.innerHTML='<p style="color:var(--grey);font-size:.85rem;text-align:center;padding:1.5rem 0">Aucun soin planifié. Ajoutez-en un.</p>'; return; }
+  list.innerHTML = planningData.map(function(item){
+    return '<div class="pi'+(item.fait?' fait':'')+'">'+
+      '<span class="pi-time">'+item.heure+'</span>'+
+      '<span class="pi-icon">'+item.icone+'</span>'+
+      '<span class="pi-name">'+item.nom+'</span>'+
+      '<button class="pi-check'+(item.fait?' fait':'')+'" onclick="toggleSoin('+item.id+','+item.fait+')">'+
+        (item.fait?'<svg width="11" height="11" fill="none" viewBox="0 0 12 12" stroke="#fff" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2 6l3 3 5-5"/></svg>':'')+
+      '</button></div>';
+  }).join('');
+}
+async function toggleSoin(id, fait){
+  try{ await fetch(API+'/planning/'+id, {method:'PATCH',headers:authHeaders(),body:JSON.stringify({fait:!fait})}); loadPlanning(); }catch(e){}
+}
+function toggleAddForm(){ var f=document.getElementById('add-form'); f.style.display=f.style.display==='block'?'none':'block'; if(f.style.display==='block') document.getElementById('add-nom').focus(); }
+async function addSoin(){
+  var heure=document.getElementById('add-time').value;
+  var nom=document.getElementById('add-nom').value.trim();
+  if(!heure||!nom){ showMsg('planning-msg','⚠️ Heure et nom requis.','warning'); return; }
+  hideMsg('planning-msg');
+  try{
+    await fetch(API+'/planning',{method:'POST',headers:authHeaders(),body:JSON.stringify({heure,nom,icone:'📌'})});
+    document.getElementById('add-time').value=''; document.getElementById('add-nom').value='';
+    document.getElementById('add-form').style.display='none';
+    loadPlanning();
+  }catch(e){ showMsg('planning-msg','❌ Serveur inaccessible.','error'); }
+}
+
+// ── MESSAGE ──
+async function submitMsg(){
+  var contenu=document.getElementById('msg-contenu').value.trim();
+  if(!contenu){ showMsg('msg-box','⚠️ Écrivez un message.','warning'); return; }
+  var btn=document.getElementById('msg-btn');
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span>Envoi…';
+  hideMsg('msg-box');
+  try{
+    var res=await fetch(API+'/message',{method:'POST',headers:authHeaders(),body:JSON.stringify({contenu})});
+    var data=await res.json();
+    if(data.success){ showMsg('msg-box','✅ Message envoyé au médecin.','success'); document.getElementById('msg-contenu').value=''; }
+    else showMsg('msg-box',data.error||'Erreur.','error');
+  }catch(e){ showMsg('msg-box','❌ Serveur inaccessible.','error'); }
+  btn.disabled=false; btn.textContent='Envoyer →';
+}
+
+// ── INIT ──
+autoLogin();
+</script>
+</body>
+</html>
