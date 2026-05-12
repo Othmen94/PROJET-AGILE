@@ -98,6 +98,8 @@ app.post('/api/auth/register', async (req, res) => {
     console.error('Erreur email:', e.message);
     res.status(500).json({ error: 'Impossible d\'envoyer l\'email. Vérifiez votre connexion.' });
   }
+// Test déploiement email
+
 });
 
 // Étape 2 : Vérification du code → crée le compte
