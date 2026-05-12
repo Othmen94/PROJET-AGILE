@@ -46,19 +46,12 @@
     }
   ],
   "photos": [
-    {
-      "id": 2,
-      "patient_nom": "Othmen AL BYDEOI",
-      "email": "othmane.bedwi@gmail.com",
-      "fichier": "1778444104112.jpg",
-      "message": "sel3AA",
-      "date": "2026-05-10T20:15:04.175Z"
-    }
+    
   ],
   "alertes": [
     {
       "id": 8,
-      "patient_nom": "Othmen AL BYDEOI",
+      "patient_nom": "unknown",
       "email": "othmane.bedwi@gmail.com",
       "niveau": "danger",
       "message": "Réponses à risque — plaie : ecoulement",
@@ -71,21 +64,12 @@
       "id": 5,
       "patient_nom": "Othmen AL BYDEOI",
       "email": "othmane.bedwi@gmail.com",
-      "contenu": "cc",
+      "contenu": "test",
       "date": "2026-05-10T20:15:28.280Z"
     }
   ],
   "planning": [
-    {
-      "id": 3,
-      "email": "othmane.bedwi@gmail.com",
-      "patient_nom": "Othmen AL BYDEOI",
-      "heure": "11:11",
-      "nom": "BRUHHHH",
-      "icone": "📌",
-      "fait": true,
-      "date": "2026-05-10T20:15:16.508Z"
-    }
+    
   ],
   "nextId": 9
 }
