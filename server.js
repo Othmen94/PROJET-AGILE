@@ -17,7 +17,10 @@ const JWT_SECRET = 'postop_secret_key_2026';
 
 // ── EMAIL ──
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false,
+  family: 4,
   auth: {
     user: process.env.GMAIL_USER,
     pass: process.env.GMAIL_PASS
@@ -25,6 +28,7 @@ const transporter = nodemailer.createTransport({
 });
 
 function sendCode(to, code) {
+
   return transporter.sendMail({
     from: '"PostOp Suivi" <' + process.env.GMAIL_USER + '>',
     to,
