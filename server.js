@@ -1,11 +1,11 @@
 const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
-const nodemailer = require('nodemailer');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const path = require('path');
 const fs = require('fs');
+const { Resend } = require('resend');
 
 const app = express();
 app.use(cors());
@@ -14,23 +14,12 @@ app.use(express.static('.'));
 app.use('/uploads', express.static('uploads'));
 
 const JWT_SECRET = 'postop_secret_key_2026';
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // ── EMAIL ──
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false,
-  family: 4,
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_PASS
-  }
-});
-
-function sendCode(to, code) {
-
-  return transporter.sendMail({
-    from: '"PostOp Suivi" <' + process.env.GMAIL_USER + '>',
+async function sendCode(to, code) {
+  const { error } = await resend.emails.send({
+    from: 'PostOp Suivi <onboarding@resend.dev>',
     to,
     subject: 'Votre code de vérification PostOp Suivi',
     html: `
@@ -42,6 +31,7 @@ function sendCode(to, code) {
       </div>
     `
   });
+  if (error) throw new Error(error.message);
 }
 
 // ── BASE DE DONNÉES JSON ──
@@ -57,7 +47,6 @@ function loadDB() {
 function saveDB(db) { fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2)); }
 function newId(db) { const id = db.nextId || 1; db.nextId = id + 1; return id; }
 
-// Codes de vérification temporaires en mémoire
 const pendingCodes = {};
 
 // ── MIDDLEWARE AUTH ──
@@ -128,7 +117,11 @@ app.post('/api/auth/verify', async (req, res) => {
   saveDB(db);
   delete pendingCodes[email.toLowerCase()];
 
-  const token = jwt.sign({ id: user.id, email: user.email, nom: user.nom, prenom: user.prenom, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
+  const token = jwt.sign(
+    { id: user.id, email: user.email, nom: user.nom, prenom: user.prenom, role: user.role },
+    JWT_SECRET,
+    { expiresIn: '7d' }
+  );
   res.json({ success: true, token, user: { nom: user.nom, prenom: user.prenom, email: user.email, role: user.role } });
 });
 
@@ -143,7 +136,11 @@ app.post('/api/auth/login', async (req, res) => {
   const ok = await bcrypt.compare(password, user.password);
   if (!ok) return res.status(400).json({ error: 'Email ou mot de passe incorrect' });
 
-  const token = jwt.sign({ id: user.id, email: user.email, nom: user.nom, prenom: user.prenom, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
+  const token = jwt.sign(
+    { id: user.id, email: user.email, nom: user.nom, prenom: user.prenom, role: user.role },
+    JWT_SECRET,
+    { expiresIn: '7d' }
+  );
   res.json({ success: true, token, user: { nom: user.nom, prenom: user.prenom, email: user.email, role: user.role } });
 });
 
@@ -164,7 +161,11 @@ app.post('/api/questionnaire', authMiddleware, (req, res) => {
   const patient_nom = `${req.user.prenom} ${req.user.nom}`;
   const est_risque = douleur >= 4 || temperature === 'elevee' || fatigue >= 4 || plaie !== 'normale';
 
-  db.questionnaires.unshift({ id: newId(db), patient_nom, email: req.user.email, douleur, temperature, fatigue, plaie, est_risque, date: new Date().toISOString() });
+  db.questionnaires.unshift({
+    id: newId(db), patient_nom, email: req.user.email,
+    douleur, temperature, fatigue, plaie, est_risque,
+    date: new Date().toISOString()
+  });
 
   if (est_risque) {
     const details = [];
@@ -172,7 +173,11 @@ app.post('/api/questionnaire', authMiddleware, (req, res) => {
     if (temperature === 'elevee') details.push('température élevée');
     if (fatigue >= 4) details.push(`fatigue ${fatigue}/5`);
     if (plaie !== 'normale') details.push(`plaie : ${plaie}`);
-    db.alertes.unshift({ id: newId(db), patient_nom, email: req.user.email, niveau: 'danger', message: `Réponses à risque — ${details.join(', ')}`, lu: false, date: new Date().toISOString() });
+    db.alertes.unshift({
+      id: newId(db), patient_nom, email: req.user.email,
+      niveau: 'danger', message: `Réponses à risque — ${details.join(', ')}`,
+      lu: false, date: new Date().toISOString()
+    });
   }
 
   saveDB(db);
@@ -190,7 +195,11 @@ app.post('/api/photo', authMiddleware, upload.single('photo'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Aucun fichier reçu' });
   const db = loadDB();
   const patient_nom = `${req.user.prenom} ${req.user.nom}`;
-  db.photos.unshift({ id: newId(db), patient_nom, email: req.user.email, fichier: req.file.filename, message: req.body.message || '', date: new Date().toISOString() });
+  db.photos.unshift({
+    id: newId(db), patient_nom, email: req.user.email,
+    fichier: req.file.filename, message: req.body.message || '',
+    date: new Date().toISOString()
+  });
   saveDB(db);
   res.json({ success: true, fichier: req.file.filename });
 });
@@ -200,7 +209,10 @@ app.post('/api/message', authMiddleware, (req, res) => {
   if (!contenu) return res.status(400).json({ error: 'Message vide' });
   const db = loadDB();
   const patient_nom = `${req.user.prenom} ${req.user.nom}`;
-  db.messages.unshift({ id: newId(db), patient_nom, email: req.user.email, contenu, date: new Date().toISOString() });
+  db.messages.unshift({
+    id: newId(db), patient_nom, email: req.user.email,
+    contenu, date: new Date().toISOString()
+  });
   saveDB(db);
   res.json({ success: true });
 });
@@ -208,14 +220,23 @@ app.post('/api/message', authMiddleware, (req, res) => {
 app.get('/api/planning/:email', authMiddleware, (req, res) => {
   const db = loadDB();
   const today = new Date().toISOString().slice(0, 10);
-  res.json(db.planning.filter(p => p.email === req.params.email && p.date.startsWith(today)).sort((a, b) => a.heure.localeCompare(b.heure)));
+  res.json(
+    db.planning
+      .filter(p => p.email === req.params.email && p.date.startsWith(today))
+      .sort((a, b) => a.heure.localeCompare(b.heure))
+  );
 });
 
 app.post('/api/planning', authMiddleware, (req, res) => {
   const { heure, nom, icone } = req.body;
   if (!heure || !nom) return res.status(400).json({ error: 'Champs manquants' });
   const db = loadDB();
-  db.planning.push({ id: newId(db), email: req.user.email, patient_nom: `${req.user.prenom} ${req.user.nom}`, heure, nom, icone: icone || '📌', fait: false, date: new Date().toISOString() });
+  db.planning.push({
+    id: newId(db), email: req.user.email,
+    patient_nom: `${req.user.prenom} ${req.user.nom}`,
+    heure, nom, icone: icone || '📌', fait: false,
+    date: new Date().toISOString()
+  });
   saveDB(db);
   res.json({ success: true });
 });
@@ -244,6 +265,10 @@ app.patch('/api/alertes/:id/lu', (req, res) => {
   saveDB(db);
   res.json({ success: true });
 });
+//
+
+
+
 
 app.get('/api/stats', (req, res) => {
   const db = loadDB();
@@ -270,9 +295,6 @@ app.listen(PORT, () => {
   console.log('   👤 Patient  → http://localhost:' + PORT + '/patient.html');
   console.log('   🩺 Médecin  → http://localhost:' + PORT + '/medecin.html');
   console.log('');
-  console.log('   GMAIL_USER:', process.env.GMAIL_USER ? '✅ défini' : '❌ manquant');
-  console.log('   GMAIL_PASS:', process.env.GMAIL_PASS ? '✅ défini' : '❌ manquant');
+  console.log('   RESEND_API_KEY:', process.env.RESEND_API_KEY ? '✅ défini' : '❌ manquant');
   console.log('');
 });
-
-//
