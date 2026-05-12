@@ -10,7 +10,7 @@ const fs = require('fs');
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static('.'));
 app.use('/uploads', express.static('uploads'));
 
 const JWT_SECRET = 'postop_secret_key_2026';
