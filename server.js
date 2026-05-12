@@ -19,11 +19,10 @@ const JWT_SECRET = 'postop_secret_key_2026';
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: 'othmane.bedwi@gmail.com',
-    pass: 'ebhotlbcoqdrtlet'
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_PASS
   }
 });
-
 function sendCode(to, code) {
   return transporter.sendMail({
     from: '"PostOp Suivi" <othmane.bedwi@gmail.com>',
@@ -257,6 +256,10 @@ app.get('/api/stats', (req, res) => {
   });
 });
 const PORT = process.env.PORT || 3000;
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
 app.listen(PORT, () => {
   console.log('');
   console.log('✅  Serveur PostOp Suivi démarré !');
