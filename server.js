@@ -23,6 +23,7 @@ const transporter = nodemailer.createTransport({
     pass: process.env.GMAIL_PASS
   }
 });
+
 function sendCode(to, code) {
   return transporter.sendMail({
     from: '"PostOp Suivi" <othmane.bedwi@gmail.com>',
