@@ -82,8 +82,7 @@ app.post('/api/auth/register', async (req, res) => {
   if (db.users.find(u => u.email === email.toLowerCase()))
     return res.status(400).json({ error: 'Cet email est déjà utilisé' });
 
-  const code = '123456';
-  
+  const code = Math.floor(100000 + Math.random() * 900000).toString();
   pendingCodes[email.toLowerCase()] = {
     code,
     expires: Date.now() + 10 * 60 * 1000,
@@ -91,15 +90,12 @@ app.post('/api/auth/register', async (req, res) => {
   };
 
   try {
-    // await sendCode(email, code);
-    console.log('Code pour', email, ':', code);
+    await sendCode(email, code);
     res.json({ success: true, message: 'Code envoyé par email' });
   } catch(e) {
     console.error('Erreur email:', e.message);
     res.status(500).json({ error: 'Impossible d\'envoyer l\'email. Vérifiez votre connexion.' });
   }
-// Test déploiement email
-
 });
 
 // Étape 2 : Vérification du code → crée le compte
