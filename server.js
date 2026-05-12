@@ -26,7 +26,7 @@ const transporter = nodemailer.createTransport({
 
 function sendCode(to, code) {
   return transporter.sendMail({
-    from: '"PostOp Suivi" <othmane.bedwi@gmail.com>',
+    from: '"PostOp Suivi" <' + process.env.GMAIL_USER + '>',
     to,
     subject: 'Votre code de vérification PostOp Suivi',
     html: `
@@ -54,7 +54,7 @@ function saveDB(db) { fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2)); }
 function newId(db) { const id = db.nextId || 1; db.nextId = id + 1; return id; }
 
 // Codes de vérification temporaires en mémoire
-const pendingCodes = {}; // email -> { code, expires, userData }
+const pendingCodes = {};
 
 // ── MIDDLEWARE AUTH ──
 function authMiddleware(req, res, next) {
@@ -69,10 +69,9 @@ function authMiddleware(req, res, next) {
 }
 
 // ════════════════════════════════
-//   AUTH — INSCRIPTION / CONNEXION
+//   AUTH
 // ════════════════════════════════
 
-// Étape 1 : Demande d'inscription → envoie le code
 app.post('/api/auth/register', async (req, res) => {
   const { email, password, nom, prenom } = req.body;
   if (!email || !password || !nom || !prenom)
@@ -94,11 +93,10 @@ app.post('/api/auth/register', async (req, res) => {
     res.json({ success: true, message: 'Code envoyé par email' });
   } catch(e) {
     console.error('Erreur email:', e.message);
-    res.status(500).json({ error: 'Impossible d\'envoyer l\'email. Vérifiez votre connexion.' });
+    res.status(500).json({ error: 'Impossible d\'envoyer l\'email : ' + e.message });
   }
 });
 
-// Étape 2 : Vérification du code → crée le compte
 app.post('/api/auth/verify', async (req, res) => {
   const { email, code } = req.body;
   const pending = pendingCodes[email?.toLowerCase()];
@@ -130,7 +128,6 @@ app.post('/api/auth/verify', async (req, res) => {
   res.json({ success: true, token, user: { nom: user.nom, prenom: user.prenom, email: user.email, role: user.role } });
 });
 
-// Connexion
 app.post('/api/auth/login', async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email et mot de passe requis' });
@@ -146,13 +143,12 @@ app.post('/api/auth/login', async (req, res) => {
   res.json({ success: true, token, user: { nom: user.nom, prenom: user.prenom, email: user.email, role: user.role } });
 });
 
-// Vérifier token (pour auto-login)
 app.get('/api/auth/me', authMiddleware, (req, res) => {
   res.json({ user: req.user });
 });
 
 // ════════════════════════════════
-//   ROUTES PATIENT (protégées)
+//   ROUTES PATIENT
 // ════════════════════════════════
 
 app.post('/api/questionnaire', authMiddleware, (req, res) => {
@@ -179,7 +175,6 @@ app.post('/api/questionnaire', authMiddleware, (req, res) => {
   res.json({ success: true, est_risque });
 });
 
-// Upload photo
 if (!fs.existsSync('uploads')) fs.mkdirSync('uploads');
 const storage = multer.diskStorage({
   destination: 'uploads/',
@@ -256,11 +251,14 @@ app.get('/api/stats', (req, res) => {
     total_patients: db.users.length
   });
 });
-const PORT = process.env.PORT || 3000;
 
+// ── PAGE D'ACCUEIL ──
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
+
+// ── DÉMARRAGE ──
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log('');
   console.log('✅  Serveur PostOp Suivi démarré !');
@@ -268,4 +266,9 @@ app.listen(PORT, () => {
   console.log('   👤 Patient  → http://localhost:' + PORT + '/patient.html');
   console.log('   🩺 Médecin  → http://localhost:' + PORT + '/medecin.html');
   console.log('');
+  console.log('   GMAIL_USER:', process.env.GMAIL_USER ? '✅ défini' : '❌ manquant');
+  console.log('   GMAIL_PASS:', process.env.GMAIL_PASS ? '✅ défini' : '❌ manquant');
+  console.log('');
 });
+
+//
