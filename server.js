@@ -256,8 +256,7 @@ app.get('/api/stats', (req, res) => {
     total_patients: db.users.length
   });
 });
-
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log('');
   console.log('✅  Serveur PostOp Suivi démarré !');

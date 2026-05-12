@@ -1,2 +1,3 @@
-node_modules
-.envgit push -u origin master
+node_modules/
+uploads/
+database.json

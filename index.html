@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PostOp Suivi — Suivi post-opératoire à domicile</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--navy:#0A1628;--navy-mid:#0F2040;--blue:#1B4FD8;--blue-light:#2E6AF6;--cyan:#00C2C7;--white:#F8FAFF;--grey:#8A9BB5;--card-bg:#101E38;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);overflow-x:hidden;}
+
+  nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:1rem 5%;background:rgba(10,22,40,0.92);backdrop-filter:blur(14px);border-bottom:1px solid rgba(255,255,255,0.06);}
+  .logo{display:flex;align-items:center;gap:9px;font-family:'DM Serif Display',serif;font-size:1.2rem;text-decoration:none;color:var(--white);}
+  .logo-icon{width:32px;height:32px;background:var(--blue);border-radius:9px;display:flex;align-items:center;justify-content:center;}
+  .logo-icon svg{width:17px;height:17px;}
+  .nav-links{display:flex;gap:.8rem;align-items:center;}
+  .nav-btn{padding:.55rem 1.2rem;border-radius:8px;font-size:.85rem;font-weight:600;cursor:pointer;text-decoration:none;font-family:'DM Sans',sans-serif;transition:all .2s;}
+  .nav-btn.outline{background:transparent;border:1px solid rgba(255,255,255,0.2);color:var(--white);}
+  .nav-btn.outline:hover{border-color:rgba(255,255,255,0.5);}
+  .nav-btn.primary{background:var(--blue);border:none;color:#fff;}
+  .nav-btn.primary:hover{background:var(--blue-light);}
+
+  /* HERO */
+  .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:7rem 5% 4rem;position:relative;overflow:hidden;}
+  .hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(27,79,216,0.07) 1px,transparent 1px),linear-gradient(90deg,rgba(27,79,216,0.07) 1px,transparent 1px);background-size:50px 50px;mask-image:radial-gradient(ellipse 80% 70% at 50% 50%,black 30%,transparent 100%);}
+  .hero-glow{position:absolute;width:700px;height:700px;background:radial-gradient(circle,rgba(27,79,216,0.2) 0%,transparent 70%);top:50%;left:50%;transform:translate(-50%,-55%);pointer-events:none;}
+  .hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(27,79,216,0.15);border:1px solid rgba(27,79,216,0.4);border-radius:100px;padding:.4rem 1rem;font-size:.78rem;font-weight:500;color:#7AAEFF;margin-bottom:1.8rem;animation:fadeUp .7s ease both;}
+  .badge-dot{width:7px;height:7px;background:var(--cyan);border-radius:50%;animation:pulse 1.5s infinite;}
+  .hero h1{font-family:'DM Serif Display',serif;font-size:clamp(2.4rem,6vw,5rem);line-height:1.1;letter-spacing:-0.03em;max-width:800px;animation:fadeUp .8s .1s ease both;}
+  .hero h1 em{font-style:italic;color:var(--cyan);}
+  .hero p{margin-top:1.4rem;color:var(--grey);font-size:clamp(.95rem,2vw,1.1rem);line-height:1.7;max-width:540px;animation:fadeUp .8s .2s ease both;}
+  .hero-actions{margin-top:2.2rem;display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;animation:fadeUp .8s .3s ease both;}
+  .btn-big{padding:.9rem 2.2rem;border-radius:12px;font-weight:600;font-size:1rem;cursor:pointer;text-decoration:none;display:inline-block;transition:all .2s;font-family:'DM Sans',sans-serif;border:none;}
+  .btn-big.primary{background:var(--blue);color:#fff;}
+  .btn-big.primary:hover{background:var(--blue-light);transform:translateY(-2px);box-shadow:0 12px 32px rgba(27,79,216,0.4);}
+  .btn-big.outline{background:transparent;border:1px solid rgba(255,255,255,0.2);color:var(--white);}
+  .btn-big.outline:hover{border-color:rgba(255,255,255,0.5);background:rgba(255,255,255,0.05);}
+
+  /* STATS */
+  .stats{display:flex;justify-content:center;flex-wrap:wrap;padding:2.5rem 5%;border-top:1px solid rgba(255,255,255,0.06);border-bottom:1px solid rgba(255,255,255,0.06);background:rgba(15,32,64,0.5);gap:0;}
+  .stat{flex:1;min-width:150px;max-width:200px;text-align:center;padding:.8rem 1.5rem;border-right:1px solid rgba(255,255,255,0.08);}
+  .stat:last-child{border-right:none;}
+  .stat-num{font-family:'DM Serif Display',serif;font-size:2.2rem;color:var(--cyan);line-height:1;}
+  .stat-label{margin-top:.3rem;font-size:.78rem;color:var(--grey);}
+
+  /* FEATURES */
+  #fonctionnalites{padding:6rem 5%;background:var(--navy-mid);}
+  .section-label{font-size:.75rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--cyan);margin-bottom:.7rem;}
+  .section-title{font-family:'DM Serif Display',serif;font-size:clamp(1.7rem,3.5vw,2.8rem);line-height:1.2;letter-spacing:-0.02em;margin-bottom:.8rem;}
+  .section-sub{color:var(--grey);font-size:.97rem;line-height:1.7;max-width:480px;margin-bottom:3rem;}
+  .features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.2rem;max-width:1100px;margin:0 auto;}
+  .feat-card{background:var(--card-bg);border:1px solid rgba(255,255,255,0.07);border-radius:18px;padding:1.8rem;transition:transform .25s,border-color .25s;position:relative;overflow:hidden;}
+  .feat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--blue),var(--cyan));opacity:0;transition:opacity .25s;}
+  .feat-card:hover{transform:translateY(-4px);border-color:rgba(27,79,216,0.3);}
+  .feat-card:hover::before{opacity:1;}
+  .feat-icon{width:46px;height:46px;border-radius:12px;background:rgba(27,79,216,0.2);display:flex;align-items:center;justify-content:center;font-size:1.3rem;margin-bottom:1rem;}
+  .feat-card h3{font-size:1rem;font-weight:600;margin-bottom:.5rem;}
+  .feat-card p{font-size:.85rem;color:var(--grey);line-height:1.6;}
+
+  /* HOW */
+  #comment{padding:6rem 5%;}
+  .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:2rem;max-width:900px;margin:3rem auto 0;text-align:center;}
+  .step-num{width:48px;height:48px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-family:'DM Serif Display',serif;font-size:1.3rem;margin:0 auto 1rem;}
+  .step h3{font-size:.95rem;font-weight:600;margin-bottom:.4rem;}
+  .step p{font-size:.83rem;color:var(--grey);line-height:1.6;}
+  .step-arrow{display:flex;align-items:center;justify-content:center;font-size:1.5rem;color:var(--grey);padding-top:1.5rem;}
+
+  /* CTA */
+  #cta{padding:6rem 5%;background:var(--navy-mid);text-align:center;}
+  .cta-box{background:linear-gradient(135deg,rgba(27,79,216,0.2),rgba(0,194,199,0.1));border:1px solid rgba(27,79,216,0.3);border-radius:24px;padding:4rem 2rem;max-width:700px;margin:0 auto;}
+  .cta-box h2{font-family:'DM Serif Display',serif;font-size:clamp(1.8rem,4vw,2.8rem);margin-bottom:1rem;}
+  .cta-box p{color:var(--grey);margin-bottom:2rem;line-height:1.7;}
+
+  /* FOOTER */
+  footer{background:#060E1C;border-top:1px solid rgba(255,255,255,0.06);padding:2.5rem 5%;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;}
+  .footer-logo{font-family:'DM Serif Display',serif;font-size:1.1rem;margin-bottom:.3rem;}
+  .footer-sub{font-size:.8rem;color:var(--grey);}
+  .footer-links{display:flex;gap:1.5rem;}
+  .footer-links a{color:var(--grey);text-decoration:none;font-size:.82rem;transition:color .2s;}
+  .footer-links a:hover{color:var(--white);}
+
+  .reveal{opacity:0;transform:translateY(20px);transition:opacity .7s ease,transform .7s ease;}
+  .reveal.visible{opacity:1;transform:translateY(0);}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+  @media(max-width:600px){
+    .nav-links .nav-btn.outline{display:none;}
+    .stat{border-right:none;border-bottom:1px solid rgba(255,255,255,0.08);}
+    .step-arrow{display:none;}
+    .steps{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="/">
+    <div class="logo-icon">
+      <svg fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+      </svg>
+    </div>
+    PostOp Suivi
+  </a>
+  <div class="nav-links">
+    <a href="#fonctionnalites" class="nav-btn outline">Fonctionnalités</a>
+    <a href="/medecin.html" class="nav-btn outline">🩺 Médecin</a>
+    <a href="/patient.html" class="nav-btn primary">Espace patient →</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-badge"><span class="badge-dot"></span>Application de suivi post-opératoire</div>
+  <h1>Votre convalescence,<br>suivie <em>à domicile</em></h1>
+  <p>Restez en contact avec votre médecin après votre opération. Signalez vos symptômes chaque jour et recevez un suivi personnalisé sans vous déplacer.</p>
+  <div class="hero-actions">
+    <a href="/patient.html" class="btn-big primary">Créer mon compte gratuit →</a>
+    <a href="#comment" class="btn-big outline">Comment ça marche ?</a>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats reveal">
+  <div class="stat"><div class="stat-num">100%</div><div class="stat-label">Gratuit</div></div>
+  <div class="stat"><div class="stat-num">4</div><div class="stat-label">Fonctionnalités clés</div></div>
+  <div class="stat"><div class="stat-num">24h</div><div class="stat-label">Suivi continu</div></div>
+  <div class="stat"><div class="stat-num">🔒</div><div class="stat-label">Données sécurisées</div></div>
+</div>
+
+<!-- FONCTIONNALITÉS -->
+<section id="fonctionnalites">
+  <div style="max-width:1100px;margin:0 auto;">
+    <p class="section-label reveal">Fonctionnalités</p>
+    <h2 class="section-title reveal">Tout ce dont vous avez besoin</h2>
+    <p class="section-sub reveal">Des outils simples pour que votre médecin puisse vous suivre efficacement depuis chez vous.</p>
+    <div class="features-grid">
+      <div class="feat-card reveal">
+        <div class="feat-icon">📋</div>
+        <h3>Questionnaire quotidien</h3>
+        <p>Répondez chaque jour à quelques questions sur votre douleur, température et fatigue. Votre médecin reçoit un résumé automatique.</p>
+      </div>
+      <div class="feat-card reveal">
+        <div class="feat-icon">📸</div>
+        <h3>Upload de photos</h3>
+        <p>Envoyez une photo de votre plaie directement depuis votre téléphone. Votre médecin vérifie la cicatrisation à distance.</p>
+      </div>
+      <div class="feat-card reveal">
+        <div class="feat-icon">🔔</div>
+        <h3>Alertes automatiques</h3>
+        <p>Si vos réponses indiquent un risque, votre médecin est alerté immédiatement pour intervenir rapidement.</p>
+      </div>
+      <div class="feat-card reveal">
+        <div class="feat-icon">🗓️</div>
+        <h3>Planning de soins</h3>
+        <p>Visualisez vos médicaments, soins et rendez-vous du jour. Ne manquez plus aucun rappel important.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMMENT -->
+<section id="comment">
+  <div style="max-width:900px;margin:0 auto;text-align:center;">
+    <p class="section-label reveal">Comment ça marche</p>
+    <h2 class="section-title reveal">3 étapes simples</h2>
+    <div class="steps">
+      <div class="step reveal">
+        <div class="step-num">1</div>
+        <h3>Créez votre compte</h3>
+        <p>Inscrivez-vous avec votre email et vérifiez votre identité avec le code reçu par mail.</p>
+      </div>
+      <div class="step-arrow reveal">→</div>
+      <div class="step reveal">
+        <div class="step-num">2</div>
+        <h3>Suivez votre santé</h3>
+        <p>Remplissez votre questionnaire chaque matin, envoyez vos photos et messages à votre médecin.</p>
+      </div>
+      <div class="step-arrow reveal">→</div>
+      <div class="step reveal">
+        <div class="step-num">3</div>
+        <h3>Restez en sécurité</h3>
+        <p>Votre médecin est alerté en cas d'anomalie et peut réagir rapidement pour éviter une réhospitalisation.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section id="cta">
+  <div class="cta-box reveal">
+    <h2>Prêt à commencer votre suivi ?</h2>
+    <p>Créez votre compte gratuitement en moins d'une minute et restez en contact avec votre médecin depuis chez vous.</p>
+    <a href="/patient.html" class="btn-big primary">Créer mon compte gratuit →</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div>
+    <div class="footer-logo">PostOp Suivi</div>
+    <div class="footer-sub">Projet Agile — EPISEN / UPEC · Équipe 7</div>
+  </div>
+  <div class="footer-links">
+    <a href="/patient.html">Espace patient</a>
+    <a href="/medecin.html">Espace médecin</a>
+    <a href="#fonctionnalites">Fonctionnalités</a>
+  </div>
+</footer>
+
+<script>
+  var obs = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){ if(e.isIntersecting) e.target.classList.add('visible'); });
+  },{threshold:0.1});
+  document.querySelectorAll('.reveal').forEach(function(el){ obs.observe(el); });
+</script>
+</body>
+</html>
