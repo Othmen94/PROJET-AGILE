@@ -195,25 +195,6 @@
         <div class="msg-box" id="register-msg"></div>
       </div>
 
-      <!-- VÉRIFICATION CODE -->
-      <div id="form-verify" style="display:none">
-        <div style="text-align:center;margin-bottom:1.2rem">
-          <div style="font-size:2rem;margin-bottom:.5rem">📧</div>
-          <p style="font-size:.9rem;color:var(--grey);line-height:1.6">Un code à 6 chiffres a été envoyé à<br><strong id="verify-email-display" style="color:var(--white)"></strong></p>
-        </div>
-        <div class="code-inputs">
-          <input class="code-input" id="c0" maxlength="1" type="text" inputmode="numeric">
-          <input class="code-input" id="c1" maxlength="1" type="text" inputmode="numeric">
-          <input class="code-input" id="c2" maxlength="1" type="text" inputmode="numeric">
-          <input class="code-input" id="c3" maxlength="1" type="text" inputmode="numeric">
-          <input class="code-input" id="c4" maxlength="1" type="text" inputmode="numeric">
-          <input class="code-input" id="c5" maxlength="1" type="text" inputmode="numeric">
-        </div>
-        <button class="submit-btn" id="verify-btn" onclick="doVerify()">Vérifier le code</button>
-        <div class="msg-box" id="verify-msg"></div>
-        <div class="resend-link">Pas reçu ? <button onclick="doRegister()">Renvoyer le code</button></div>
-      </div>
-
     </div>
   </div>
 
@@ -329,7 +310,6 @@ var API = '/api';
 var currentUser = null;
 var qAnswers = {};
 var selectedFile = null;
-var pendingEmail = '';
 
 // ── TOKEN ──
 function getToken() { return localStorage.getItem('postop_token'); }
@@ -383,7 +363,6 @@ function showAuthTab(tab) {
   document.querySelectorAll('.auth-tab').forEach(function(b,i){ b.classList.toggle('active', (tab==='login'&&i===0)||(tab==='register'&&i===1)); });
   document.getElementById('form-login').style.display = tab === 'login' ? 'block' : 'none';
   document.getElementById('form-register').style.display = tab === 'register' ? 'block' : 'none';
-  document.getElementById('form-verify').style.display = 'none';
 }
 
 // ── MSG ──
@@ -407,7 +386,7 @@ async function doLogin() {
   btn.disabled = false; btn.textContent = 'Se connecter';
 }
 
-// ── INSCRIPTION ──
+// ── INSCRIPTION (sans vérification email) ──
 async function doRegister() {
   var prenom = document.getElementById('reg-prenom').value.trim();
   var nom = document.getElementById('reg-nom').value.trim();
@@ -416,54 +395,18 @@ async function doRegister() {
   if (!prenom || !nom || !email || !password) { showMsg('register-msg','Remplissez tous les champs.','error'); return; }
   if (password.length < 6) { showMsg('register-msg','Mot de passe trop court (6 caractères min).','error'); return; }
   var btn = document.getElementById('register-btn');
-  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Envoi du code…';
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Création…';
   hideMsg('register-msg');
   try {
     var res = await fetch(API+'/auth/register', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({prenom, nom, email, password}) });
     var data = await res.json();
-    if (data.success) {
-      pendingEmail = email;
-      document.getElementById('form-register').style.display = 'none';
-      document.getElementById('auth-tabs').style.display = 'none';
-      document.getElementById('form-verify').style.display = 'block';
-      document.getElementById('verify-email-display').textContent = email;
-      document.getElementById('c0').focus();
+    if (data.success && data.token) {
+      setToken(data.token);
+      currentUser = data.user;
+      showApp();
     } else showMsg('register-msg', data.error || 'Erreur.', 'error');
   } catch(e) { showMsg('register-msg','Serveur inaccessible.','error'); }
   btn.disabled = false; btn.textContent = 'Créer mon compte →';
-}
-
-// ── CODE INPUT NAVIGATION ──
-document.querySelectorAll('.code-input').forEach(function(input, i) {
-  input.addEventListener('input', function() {
-    this.value = this.value.replace(/[^0-9]/g,'');
-    if (this.value && i < 5) document.getElementById('c'+(i+1)).focus();
-    if (i === 5 && this.value) doVerify();
-  });
-  input.addEventListener('keydown', function(e) {
-    if (e.key === 'Backspace' && !this.value && i > 0) document.getElementById('c'+(i-1)).focus();
-  });
-});
-
-// ── VÉRIFICATION CODE ──
-async function doVerify() {
-  var code = '';
-  for (var i=0; i<6; i++) code += document.getElementById('c'+i).value;
-  if (code.length < 6) { showMsg('verify-msg','Entrez les 6 chiffres.','warning'); return; }
-  var btn = document.getElementById('verify-btn');
-  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Vérification…';
-  hideMsg('verify-msg');
-  try {
-    var res = await fetch(API+'/auth/verify', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({email: pendingEmail, code}) });
-    var data = await res.json();
-    if (data.success) { setToken(data.token); currentUser = data.user; showApp(); }
-    else {
-      showMsg('verify-msg', data.error || 'Code incorrect.', 'error');
-      for (var i=0; i<6; i++) document.getElementById('c'+i).value = '';
-      document.getElementById('c0').focus();
-    }
-  } catch(e) { showMsg('verify-msg','Serveur inaccessible.','error'); }
-  btn.disabled = false; btn.textContent = 'Vérifier le code';
 }
 
 // ── TABS APP ──
