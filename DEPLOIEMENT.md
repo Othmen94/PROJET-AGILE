@@ -83,3 +83,5 @@ dossier `uploads/` du conteneur Render. **Render efface ce dossier
 à chaque redéploiement.** Pour de la prod il faudrait migrer
 vers **Supabase Storage** (un bucket public ou signé) — c'est une
 amélioration future, hors scope de ce changement.
+
+
