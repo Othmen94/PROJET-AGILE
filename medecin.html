@@ -822,8 +822,14 @@ async function loadPhotos() {
       return;
     }
     grid.innerHTML = rows.map(function(r) {
-      var imgHTML = r.fichier
-        ? '<img src="/uploads/' + r.fichier + '" alt="Plaie ' + r.patient_nom + '" loading="lazy">'
+      // r.fichier peut être :
+      //   - une URL Supabase Storage complète (nouveau format) → utilisée telle quelle
+      //   - juste un nom de fichier (ancien format) → servi depuis /uploads/
+      var src = r.fichier && /^https?:\/\//i.test(r.fichier)
+        ? r.fichier
+        : (r.fichier ? '/uploads/' + r.fichier : '');
+      var imgHTML = src
+        ? '<img src="' + src + '" alt="Plaie ' + r.patient_nom + '" loading="lazy">'
         : '<div style="position:relative;z-index:1;font-size:10.5px;color:var(--text-muted);text-align:center;padding:8px;">photo plaie<br>placeholder</div>';
       var msgHTML = r.message
         ? '<div class="doc-photo-msg">"' + r.message + '"</div>'

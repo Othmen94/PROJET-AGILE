@@ -161,23 +161,45 @@ app.post('/api/questionnaire', authMiddleware, async (req, res) => {
   res.json({ success: true, est_risque });
 });
 
-if (!fs.existsSync('uploads')) fs.mkdirSync('uploads');
-const storage = multer.diskStorage({
-  destination: 'uploads/',
-  filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
+// Upload via Supabase Storage (bucket "photos") — persistant, contrairement
+// au disque Render qui est effacé à chaque redémarrage.
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 }
 });
-const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } });
 
 app.post('/api/photo', authMiddleware, upload.single('photo'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Aucun fichier reçu' });
+
+  // Nom de fichier unique
+  const ext = (path.extname(req.file.originalname) || '.jpg').toLowerCase();
+  const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext}`;
+
+  // Push vers Supabase Storage
+  const { error: upErr } = await supabase.storage
+    .from('photos')
+    .upload(filename, req.file.buffer, {
+      contentType: req.file.mimetype || 'image/jpeg',
+      upsert: false
+    });
+
+  if (upErr) {
+    console.error('Erreur upload Supabase Storage :', upErr);
+    return res.status(500).json({ error: 'Upload échoué : ' + upErr.message });
+  }
+
+  // URL publique
+  const { data: { publicUrl } } = supabase.storage.from('photos').getPublicUrl(filename);
+
   const patient_nom = `${req.user.prenom} ${req.user.nom}`;
   const { error } = await supabase.from('photos').insert({
     patient_nom, email: req.user.email,
-    fichier: req.file.filename,
+    fichier: publicUrl,
     message: req.body.message || ''
   });
   if (error) return res.status(500).json({ error: error.message });
-  res.json({ success: true, fichier: req.file.filename });
+
+  res.json({ success: true, fichier: publicUrl });
 });
 
 app.post('/api/message', authMiddleware, async (req, res) => {

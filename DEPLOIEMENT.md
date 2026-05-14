@@ -76,12 +76,41 @@ Une fois redéployé, teste :
    recevoir un code à 6 chiffres.
 3. Vérification du code → création du compte + redirection app.
 
-## Note sur les uploads
+## Uploads photos — Supabase Storage
 
-Les photos uploadées par les patients sont stockées dans le
-dossier `uploads/` du conteneur Render. **Render efface ce dossier
-à chaque redéploiement.** Pour de la prod il faudrait migrer
-vers **Supabase Storage** (un bucket public ou signé) — c'est une
-amélioration future, hors scope de ce changement.
+Les photos sont stockées dans un bucket **Supabase Storage** (persistant,
+contrairement au disque Render qui est effacé à chaque redéploiement).
+
+### Création du bucket (une seule fois)
+
+1. Supabase Dashboard → **Storage** (icône dossier dans le menu de gauche)
+2. **New bucket**
+   - **Name** : `photos`
+   - **Public bucket** : ✅ activé (les URLs sont publiques, sans token)
+   - **File size limit** : `10 MB` (ou plus)
+   - **Allowed MIME types** : `image/jpeg, image/png, image/heic, image/webp`
+3. **Create bucket**
+
+### Politique RLS (Storage)
+
+Par défaut le bucket public laisse n'importe qui **lire** les fichiers
+(via leur URL exacte). Pour autoriser l'**upload** depuis le backend
+(qui utilise la clé `service_role`), aucune policy n'est nécessaire :
+la service_role contourne RLS.
+
+Si tu veux un jour activer RLS strict, ajoute une policy d'upload :
+
+```sql
+create policy "service can upload to photos"
+on storage.objects for insert
+to service_role
+with check (bucket_id = 'photos');
+```
+
+### Anciennes photos (avant migration)
+
+Les photos uploadées avant cette migration étaient sur le disque Render
+et sont définitivement perdues si Render a redémarré entre-temps. Les
+entrées correspondantes dans la table `photos` afficheront un placeholder.
 
 
