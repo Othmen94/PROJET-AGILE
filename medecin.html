@@ -1,306 +1,885 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PostOp Suivi — Espace Médecin</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root{--navy:#0A1628;--navy-mid:#0F2040;--blue:#1B4FD8;--blue-light:#2E6AF6;--cyan:#00C2C7;--white:#F8FAFF;--grey:#8A9BB5;--card-bg:#101E38;--success:#22C55E;--danger:#EF4444;--warning:#F59E0B;}
-  *{margin:0;padding:0;box-sizing:border-box;}
-  html{scroll-behavior:smooth;}
-  body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);min-height:100vh;}
+:root{
+  --bg:#0A1322;--bg-elev:#0F1B30;--surface:#142342;--surface-2:#1A2B4F;
+  --border:rgba(255,255,255,0.07);--border-strong:rgba(255,255,255,0.14);
+  --text:#F1F5FB;--text-mid:#B5C2D8;--text-muted:#7A8AA8;
+  --accent:oklch(0.72 0.13 200);--accent-soft:oklch(0.72 0.13 200/0.14);--accent-strong:oklch(0.78 0.14 200);
+  --primary:oklch(0.55 0.18 258);--primary-strong:oklch(0.62 0.20 258);
+  --success:oklch(0.74 0.14 155);--warning:oklch(0.82 0.14 75);--danger:oklch(0.7 0.18 25);
+  --shadow-md:0 8px 24px rgba(0,0,0,0.25);--shadow-lg:0 24px 64px -16px rgba(0,0,0,0.45);
+  --serif:'DM Serif Display',Georgia,serif;--sans:'DM Sans',system-ui,-apple-system,sans-serif;
+}
+[data-theme="light"]{
+  --bg:#F6F4EF;--bg-elev:#FFFFFF;--surface:#FFFFFF;--surface-2:#FBF9F4;
+  --border:rgba(20,30,45,0.08);--border-strong:rgba(20,30,45,0.14);
+  --text:#131C2E;--text-mid:#45556F;--text-muted:#78889F;
+  --accent:oklch(0.55 0.13 200);--accent-soft:oklch(0.55 0.13 200/0.10);--accent-strong:oklch(0.48 0.14 200);
+  --primary:oklch(0.45 0.18 258);--primary-strong:oklch(0.38 0.20 258);
+  --shadow-md:0 8px 24px rgba(20,30,45,0.06);--shadow-lg:0 24px 64px -16px rgba(20,30,45,0.12);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;transition:background-color .3s,color .3s;}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+a{color:inherit;text-decoration:none;}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+@keyframes slideUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
 
-  nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:1rem 5%;background:rgba(10,22,40,0.95);backdrop-filter:blur(14px);border-bottom:1px solid rgba(255,255,255,0.06);}
-  .logo{display:flex;align-items:center;gap:9px;font-family:'DM Serif Display',serif;font-size:1.2rem;}
-  .logo-icon{width:32px;height:32px;background:var(--blue);border-radius:9px;display:flex;align-items:center;justify-content:center;}
-  .logo-icon svg{width:17px;height:17px;}
-  .nav-right{display:flex;align-items:center;gap:1rem;}
-  .badge-alert{background:var(--danger);color:#fff;font-size:.72rem;font-weight:700;padding:.2rem .55rem;border-radius:100px;display:none;}
-  .nav-link{color:var(--grey);text-decoration:none;font-size:.85rem;padding:.4rem .9rem;border-radius:7px;border:1px solid rgba(255,255,255,0.1);transition:all .2s;}
-  .nav-link:hover{color:var(--white);border-color:rgba(255,255,255,0.3);}
-  .refresh-btn{background:rgba(27,79,216,0.2);border:1px solid rgba(27,79,216,0.4);color:var(--cyan);font-size:.82rem;padding:.4rem .9rem;border-radius:7px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
-  .refresh-btn:hover{background:rgba(27,79,216,0.35);}
+/* ── SHELL ── */
+.doc-shell{display:flex;min-height:100vh;}
 
-  .main{max-width:1100px;margin:0 auto;padding:6rem 2rem 4rem;}
-  .page-title{margin-bottom:2rem;}
-  .page-title h1{font-family:'DM Serif Display',serif;font-size:2rem;margin-bottom:.3rem;}
-  .page-title p{color:var(--grey);font-size:.88rem;}
+/* ── SIDEBAR ── */
+.doc-sidebar{
+  width:248px;background:var(--bg-elev);border-right:1px solid var(--border);
+  padding:22px 16px;display:flex;flex-direction:column;gap:4px;
+  position:sticky;top:0;height:100vh;flex-shrink:0;overflow-y:auto;
+}
+@media(max-width:900px){
+  .doc-sidebar{
+    position:fixed;top:0;bottom:0;left:0;z-index:100;
+    transform:translateX(-100%);transition:transform .25s ease;width:260px;
+  }
+  .doc-sidebar.open{transform:translateX(0);}
+}
+.doc-side-logo{display:flex;align-items:center;gap:10px;padding:4px 8px 18px;}
+.doc-side-logo-text{font-family:var(--serif);font-size:17px;}
+.doc-side-doc{padding:12px;border-radius:12px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+.doc-side-avatar{width:36px;height:36px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:14px;flex-shrink:0;}
+.doc-side-name{font-size:13.5px;font-weight:600;}
+.doc-side-role{font-size:11px;color:var(--text-muted);}
+.doc-side-link{
+  display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;
+  color:var(--text-mid);font-size:13.5px;transition:all .15s;width:100%;text-align:left;
+}
+.doc-side-link.active{background:var(--accent-soft);color:var(--accent-strong);font-weight:600;}
+.doc-side-link:not(.active):hover{background:var(--surface);color:var(--text);}
+.doc-side-badge{
+  margin-left:auto;min-width:22px;padding:1px 7px;
+  background:var(--danger);color:#fff;border-radius:100px;
+  font-size:11px;font-weight:700;text-align:center;
+}
+.doc-side-bottom{margin-top:auto;padding:12px 4px 0;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:4px;}
 
-  /* STATS */
-  .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem;}
-  .stat-card{background:var(--card-bg);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:1.3rem 1.5rem;}
-  .stat-card .num{font-family:'DM Serif Display',serif;font-size:2rem;line-height:1;margin-bottom:.3rem;}
-  .stat-card .lbl{font-size:.78rem;color:var(--grey);}
-  .stat-card.danger-card{border-color:rgba(239,68,68,0.3);background:rgba(239,68,68,0.06);}
-  .stat-card.danger-card .num{color:var(--danger);}
+/* ── MOBILE BAR ── */
+.doc-mobile-bar{display:none;}
+@media(max-width:900px){
+  .doc-mobile-bar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 18px;border-bottom:1px solid var(--border);
+    background:color-mix(in srgb,var(--bg-elev) 95%,transparent);
+    backdrop-filter:blur(20px);position:sticky;top:0;z-index:50;
+  }
+}
+.doc-mobile-left{display:flex;align-items:center;gap:10px;}
+.doc-mobile-right{display:flex;align-items:center;gap:8px;}
 
-  /* TABS */
-  .tabs{display:flex;gap:.5rem;margin-bottom:1.5rem;flex-wrap:wrap;}
-  .tab{padding:.6rem 1.1rem;border-radius:100px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:var(--grey);font-size:.83rem;font-weight:500;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:.4rem;}
-  .tab.active{background:var(--blue);border-color:var(--blue);color:#fff;}
-  .tab:hover:not(.active){border-color:rgba(255,255,255,0.3);color:var(--white);}
-  .tab .count{background:rgba(255,255,255,0.2);border-radius:100px;padding:.05rem .45rem;font-size:.72rem;font-weight:700;}
-  .tab.active .count{background:rgba(255,255,255,0.25);}
+/* ── BACKDROP ── */
+.doc-backdrop{display:none;}
+@media(max-width:900px){
+  .doc-backdrop{
+    display:block;position:fixed;inset:0;background:rgba(0,0,0,0.5);
+    z-index:99;opacity:0;pointer-events:none;transition:opacity .2s;
+  }
+  .doc-backdrop.show{opacity:1;pointer-events:auto;}
+}
 
-  .panel{display:none;}
-  .panel.active{display:block;}
+/* ── MAIN ── */
+.doc-main{flex:1;min-width:0;padding:28px 36px 60px;display:flex;flex-direction:column;}
+@media(max-width:900px){.doc-main{padding:18px 18px 60px;}}
+@media(max-width:540px){.doc-main{padding:14px 14px 60px;}}
 
-  /* TABLE */
-  .table-wrap{background:var(--card-bg);border:1px solid rgba(255,255,255,0.08);border-radius:18px;overflow:hidden;}
-  table{width:100%;border-collapse:collapse;}
-  th{font-size:.75rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--grey);padding:.9rem 1.2rem;text-align:left;border-bottom:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);}
-  td{padding:.85rem 1.2rem;font-size:.85rem;border-bottom:1px solid rgba(255,255,255,0.04);}
-  tr:last-child td{border-bottom:none;}
-  tr:hover td{background:rgba(255,255,255,0.02);}
-  .empty{text-align:center;padding:3rem;color:var(--grey);font-size:.88rem;}
+/* ── PAGE HEAD ── */
+.doc-page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:24px;flex-wrap:wrap;}
+.doc-h1{font-family:var(--serif);font-size:clamp(26px,3.5vw,32px);line-height:1.1;letter-spacing:-0.02em;}
+.doc-subtitle{color:var(--text-mid);font-size:14px;margin-top:6px;}
+.doc-section-title{font-family:var(--serif);font-size:20px;margin-bottom:14px;}
 
-  /* BADGES */
-  .badge{display:inline-block;font-size:.72rem;font-weight:600;padding:.2rem .6rem;border-radius:100px;}
-  .badge.danger{background:rgba(239,68,68,0.15);color:#FCA5A5;border:1px solid rgba(239,68,68,0.3);}
-  .badge.warning{background:rgba(245,158,11,0.15);color:#FDE68A;border:1px solid rgba(245,158,11,0.3);}
-  .badge.ok{background:rgba(34,197,94,0.12);color:#86EFAC;border:1px solid rgba(34,197,94,0.25);}
-  .badge.info{background:rgba(27,79,216,0.15);color:#93C5FD;border:1px solid rgba(27,79,216,0.3);}
+/* ── PANEL ── */
+.doc-panel{display:none;animation:slideUp .3s ease both;}
+.doc-panel.active{display:block;}
 
-  /* ALERT ACTIONS */
-  .lu-btn{background:transparent;border:1px solid rgba(255,255,255,0.12);color:var(--grey);font-size:.75rem;padding:.25rem .65rem;border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
-  .lu-btn:hover{border-color:var(--success);color:var(--success);}
-  .lu-badge{font-size:.72rem;color:var(--success);}
+/* ── STATS ── */
+.doc-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px;}
+@media(max-width:900px){.doc-stats{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:480px){.doc-stats{grid-template-columns:1fr 1fr;}}
+.doc-stat{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px 18px;}
+.doc-stat.danger{background:oklch(0.7 0.18 25/0.06);border-color:oklch(0.7 0.18 25/0.25);}
+.doc-stat-label{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em;}
+.doc-stat-n{font-family:var(--serif);font-size:28px;line-height:1;}
+.doc-stat.danger .doc-stat-n{color:var(--danger);}
+.doc-stat-delta{font-size:11.5px;margin-top:6px;color:var(--text-muted);}
 
-  /* PHOTOS */
-  .photos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem;}
-  .photo-card{background:var(--card-bg);border:1px solid rgba(255,255,255,0.08);border-radius:14px;overflow:hidden;}
-  .photo-card img{width:100%;height:150px;object-fit:cover;display:block;}
-  .photo-info{padding:.9rem;}
-  .photo-info strong{font-size:.85rem;display:block;margin-bottom:.2rem;}
-  .photo-info span{font-size:.75rem;color:var(--grey);}
-  .photo-msg{font-size:.78rem;color:var(--grey);margin-top:.4rem;font-style:italic;}
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:100px;font-weight:600;font-size:11.5px;white-space:nowrap;}
+.badge.danger{background:oklch(0.7 0.18 25/0.16);color:oklch(0.78 0.18 25);}
+.badge.warning{background:oklch(0.82 0.14 75/0.16);color:oklch(0.85 0.14 75);}
+.badge.success{background:oklch(0.74 0.14 155/0.14);color:oklch(0.78 0.14 155);}
+.badge.info{background:oklch(0.55 0.18 258/0.18);color:oklch(0.78 0.13 258);}
 
-  /* SPINNER */
-  .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.2);border-top-color:var(--cyan);border-radius:50%;animation:spin .7s linear infinite;}
-  @keyframes spin{to{transform:rotate(360deg);}}
-  @keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
-  .fade-in{animation:fadeIn .4s ease both;}
+/* ── ALERT ROWS ── */
+.alert-row{
+  background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  padding:16px 16px 16px 0;display:flex;align-items:center;gap:14px;
+  transition:opacity .2s;overflow:hidden;
+}
+.alert-row.read{opacity:.5;}
+.alert-bar{width:4px;align-self:stretch;border-radius:0 4px 4px 0;flex-shrink:0;}
+.alert-bar.danger{background:var(--danger);}
+.alert-bar.warning{background:var(--warning);}
+.alert-bar.info{background:var(--accent);}
+.alert-body{flex:1;min-width:0;}
+.alert-head{display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;}
+.alert-patient{font-size:14.5px;font-weight:600;}
+.alert-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex-shrink:0;}
+.alert-msg{font-size:13.5px;color:var(--text-mid);}
+.alert-date{font-size:11.5px;color:var(--text-muted);margin-top:6px;}
+.lu-btn{
+  display:inline-flex;align-items:center;gap:5px;padding:7px 12px;
+  font-size:12.5px;font-weight:600;border-radius:8px;
+  border:1px solid var(--border-strong);color:var(--text-mid);
+  transition:all .18s;flex-shrink:0;
+}
+.lu-btn:hover{border-color:var(--success);color:var(--success);}
+.lu-done{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--success);flex-shrink:0;}
 
-  .loading-row td{text-align:center;padding:2.5rem;color:var(--grey);}
+/* ── FILTER PILLS ── */
+.filter-pills{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap;}
+.filter-pill{
+  padding:7px 13px;border-radius:100px;font-size:12.5px;font-weight:500;
+  background:var(--surface);color:var(--text-mid);border:1px solid var(--border);
+  display:inline-flex;align-items:center;gap:6px;transition:all .18s;
+}
+.filter-pill.active{background:var(--accent);color:#07111F;border-color:var(--accent);}
+.filter-pill:hover:not(.active){border-color:var(--border-strong);color:var(--text);}
+.pill-count{font-size:11px;opacity:.8;}
 
-  @media(max-width:800px){.stats-grid{grid-template-columns:1fr 1fr;}.photos-grid{grid-template-columns:1fr 1fr;}}
-  @media(max-width:500px){.stats-grid{grid-template-columns:1fr;}}
+/* ── PATIENTS GRID ── */
+.doc-patients-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;}
+.doc-patient-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:16px;
+  padding:18px;transition:border-color .2s,transform .2s;cursor:pointer;
+}
+.doc-patient-card:hover{border-color:var(--border-strong);transform:translateY(-2px);}
+.doc-patient-head{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+.doc-patient-avatar{
+  width:44px;height:44px;border-radius:50%;background:var(--primary);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:15px;flex-shrink:0;
+}
+.doc-patient-name{font-size:15px;font-weight:600;}
+.doc-patient-op{font-size:12px;color:var(--text-muted);}
+.doc-patient-meta{display:flex;justify-content:space-between;gap:10px;padding-top:12px;border-top:1px solid var(--border);font-size:12px;color:var(--text-mid);}
+
+/* ── SEARCH ── */
+.search-wrap{position:relative;display:flex;align-items:center;background:var(--bg-elev);border:1px solid var(--border-strong);border-radius:10px;width:280px;max-width:100%;transition:border-color .18s,box-shadow .18s;}
+.search-wrap:focus-within{border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft);}
+.search-icon{padding-left:12px;color:var(--text-muted);display:flex;flex-shrink:0;}
+.search-inp{flex:1;padding:11px 14px;background:transparent;border:none;color:var(--text);font-size:14px;font-family:inherit;outline:none;}
+.search-inp::placeholder{color:var(--text-muted);}
+
+/* ── TABLE ── */
+.doc-table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;}
+.doc-table{width:100%;border-collapse:collapse;}
+.doc-table th{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);padding:12px 18px;text-align:left;border-bottom:1px solid var(--border);background:var(--bg-elev);}
+.doc-table td{padding:13px 18px;font-size:13.5px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.doc-table tr:last-child td{border-bottom:none;}
+.doc-table tr:hover td{background:var(--bg-elev);}
+
+/* Mobile card list (questionnaires) */
+.doc-card-list{display:none;flex-direction:column;gap:10px;}
+@media(max-width:720px){
+  .doc-table-wrap{display:none;}
+  .doc-card-list{display:flex;}
+}
+.doc-row-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px;}
+.doc-row-head{display:flex;align-items:center;gap:10px;}
+.doc-row-avatar{width:36px;height:36px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:13px;flex-shrink:0;}
+.doc-row-name{font-size:14px;font-weight:600;}
+.doc-row-date{font-size:11.5px;color:var(--text-muted);}
+.doc-row-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.doc-row-cell{padding:8px;background:var(--bg-elev);border-radius:8px;}
+.doc-row-cell-lbl{font-size:10.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;}
+.doc-row-cell-val{font-size:14px;font-weight:600;margin-top:3px;}
+
+/* ── PHOTOS ── */
+.doc-photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;}
+.doc-photo-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+.doc-photo-img{
+  width:100%;aspect-ratio:4/3;
+  background:linear-gradient(135deg,var(--surface-2),var(--bg-elev));
+  position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--text-muted);
+}
+.doc-photo-img::after{
+  content:'';position:absolute;inset:0;
+  background-image:repeating-linear-gradient(45deg,transparent,transparent 12px,color-mix(in srgb,var(--accent) 8%,transparent) 12px,color-mix(in srgb,var(--accent) 8%,transparent) 14px);
+}
+.doc-photo-img img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;}
+.doc-photo-body{padding:12px 14px;}
+.doc-photo-name{font-size:14px;font-weight:600;margin-bottom:3px;}
+.doc-photo-date{font-size:11.5px;color:var(--text-muted);margin-bottom:8px;}
+.doc-photo-msg{font-size:12.5px;color:var(--text-mid);font-style:italic;border-left:2px solid var(--accent);padding-left:8px;margin-top:6px;}
+
+/* ── MESSAGES ── */
+.doc-msg-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;}
+.doc-msg-avatar{width:38px;height:38px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:13px;flex-shrink:0;}
+
+/* ── BUTTONS ── */
+.btn-sm{display:inline-flex;align-items:center;gap:5px;padding:7px 12px;font-size:13px;font-weight:600;border-radius:8px;border:1px solid var(--border-strong);color:var(--text-mid);transition:all .18s;cursor:pointer;}
+.btn-sm:hover{color:var(--text);border-color:var(--text-muted);}
+.btn-primary-sm{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;font-size:13px;font-weight:600;border-radius:8px;background:var(--accent);color:#07111F;border:none;cursor:pointer;transition:background .18s;}
+.btn-primary-sm:hover{background:var(--accent-strong);}
+
+/* ── THEME TOGGLE ── */
+.theme-btn{width:34px;height:34px;border-radius:100px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border-strong);color:var(--text-mid);transition:all .25s;flex-shrink:0;}
+.theme-btn:hover{color:var(--text);background:var(--surface);}
+
+/* ── SPINNER ── */
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;opacity:.8;}
+
+/* ── EMPTY STATE ── */
+.empty-state{text-align:center;padding:48px 24px;color:var(--text-muted);font-size:14px;}
+
+/* ── UNREAD DOT BADGE ── */
+.unread-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--danger);flex-shrink:0;}
+
+/* ── SECTION HEADER LINK ── */
+.see-all{font-size:13px;color:var(--accent);display:inline-flex;align-items:center;gap:4px;cursor:pointer;}
+.see-all:hover{color:var(--accent-strong);}
 </style>
 </head>
 <body>
 
-<nav>
-  <div class="logo">
-    <div class="logo-icon">
-      <svg fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-      </svg>
+<!-- ══ MOBILE TOP BAR ══ -->
+<div class="doc-mobile-bar">
+  <div class="doc-mobile-left">
+    <button onclick="toggleSidebar()" aria-label="Menu">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <a href="/" style="display:flex;align-items:center;gap:8px;font-family:var(--serif);font-size:16px;">
+      <svg width="26" height="26" viewBox="0 0 32 32" fill="none" aria-hidden="true"><rect width="32" height="32" rx="9" fill="var(--primary)"/><path d="M7 16h4l2-4 4 8 2-4h6" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      PostOp
+    </a>
+  </div>
+  <div class="doc-mobile-right">
+    <span class="badge danger" id="mobile-alert-badge" style="display:none"></span>
+    <button class="theme-btn" onclick="toggleTheme()" id="theme-btn-mobile" title="Changer de thème">
+      <svg id="theme-icon-mobile" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- ══ SHELL ══ -->
+<div class="doc-shell">
+
+  <!-- Backdrop -->
+  <div class="doc-backdrop" id="sidebar-backdrop" onclick="closeSidebar()"></div>
+
+  <!-- ══ SIDEBAR ══ -->
+  <aside class="doc-sidebar" id="doc-sidebar">
+    <div class="doc-side-logo">
+      <svg width="30" height="30" viewBox="0 0 32 32" fill="none" aria-hidden="true"><rect width="32" height="32" rx="9" fill="var(--primary)"/><path d="M7 16h4l2-4 4 8 2-4h6" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span class="doc-side-logo-text">PostOp</span>
     </div>
-    PostOp Suivi — Dr. Tony Chopper
-  </div>
-  <div class="nav-right">
-    <span class="badge-alert" id="badge-alert">0 alertes</span>
-    <button class="refresh-btn" onclick="loadAll()">↻ Actualiser</button>
-    <a href="/patient.html" class="nav-link">👤 Espace patient</a>
-  </div>
-</nav>
 
-<div class="main fade-in">
-  <div class="page-title">
-    <h1> Tableau de bord médecin</h1>
-    <p id="last-update">Chargement en cours…</p>
-  </div>
-
-  <!-- STATS -->
-  <div class="stats-grid">
-    <div class="stat-card danger-card"><div class="num" id="st-alertes">–</div><div class="lbl">Alertes non lues</div></div>
-    <div class="stat-card"><div class="num" id="st-questionnaires">–</div><div class="lbl">Questionnaires reçus</div></div>
-    <div class="stat-card"><div class="num" id="st-photos">–</div><div class="lbl">Photos reçues</div></div>
-    <div class="stat-card"><div class="num" id="st-messages">–</div><div class="lbl">Messages patients</div></div>
-  </div>
-
-  <!-- TABS -->
-  <div class="tabs">
-    <button class="tab active" onclick="switchTab('alertes',this)">🔔 Alertes <span class="count" id="c-alertes">0</span></button>
-    <button class="tab" onclick="switchTab('questionnaires',this)">📋 Questionnaires <span class="count" id="c-q">0</span></button>
-    <button class="tab" onclick="switchTab('photos',this)">📸 Photos <span class="count" id="c-photos">0</span></button>
-    <button class="tab" onclick="switchTab('messages',this)">💬 Messages <span class="count" id="c-messages">0</span></button>
-  </div>
-
-  <!-- ALERTES -->
-  <div class="panel active" id="panel-alertes">
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Patient</th><th>Niveau</th><th>Message</th><th>Date</th><th>Statut</th></tr></thead>
-        <tbody id="tb-alertes"><tr class="loading-row"><td colspan="5"><span class="spinner"></span></td></tr></tbody>
-      </table>
+    <div class="doc-side-doc">
+      <div class="doc-side-avatar">TC</div>
+      <div style="flex:1;min-width:0;">
+        <div class="doc-side-name">Dr. Tony Chopper</div>
+        <div class="doc-side-role">Chirurgien</div>
+      </div>
     </div>
-  </div>
 
-  <!-- QUESTIONNAIRES -->
-  <div class="panel" id="panel-questionnaires">
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Patient</th><th>Douleur</th><th>Temp.</th><th>Fatigue</th><th>Plaie</th><th>Risque</th><th>Date</th></tr></thead>
-        <tbody id="tb-questionnaires"><tr class="loading-row"><td colspan="7"><span class="spinner"></span></td></tr></tbody>
-      </table>
+    <button class="doc-side-link active" id="nav-overview" onclick="showSection('overview')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>Vue d'ensemble</span>
+    </button>
+    <button class="doc-side-link" id="nav-alerts" onclick="showSection('alerts')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <span>Alertes</span>
+      <span class="doc-side-badge" id="alerts-badge" style="display:none">0</span>
+    </button>
+    <button class="doc-side-link" id="nav-patients" onclick="showSection('patients')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span>Patients</span>
+    </button>
+    <button class="doc-side-link" id="nav-questionnaires" onclick="showSection('questionnaires')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><line x1="9" y1="11" x2="15" y2="11"/><line x1="9" y1="15" x2="13" y2="15"/></svg>
+      <span>Questionnaires</span>
+    </button>
+    <button class="doc-side-link" id="nav-photos" onclick="showSection('photos')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      <span>Photos</span>
+    </button>
+    <button class="doc-side-link" id="nav-messages" onclick="showSection('messages')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span>Messages</span>
+    </button>
+
+    <div class="doc-side-bottom">
+      <button class="doc-side-link" onclick="toggleTheme()" id="theme-btn-sidebar">
+        <svg id="theme-icon-sidebar" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <span id="theme-label-sidebar">Mode clair</span>
+      </button>
+      <a href="/patient.html" class="doc-side-link">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+        <span>Quitter</span>
+      </a>
     </div>
-  </div>
+  </aside>
 
-  <!-- PHOTOS -->
-  <div class="panel" id="panel-photos">
-    <div class="photos-grid" id="photos-grid"><p style="color:var(--grey);font-size:.88rem;padding:2rem">Chargement…</p></div>
-  </div>
+  <!-- ══ MAIN ══ -->
+  <main class="doc-main">
 
-  <!-- MESSAGES -->
-  <div class="panel" id="panel-messages">
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Patient</th><th>Message</th><th>Date</th></tr></thead>
-        <tbody id="tb-messages"><tr class="loading-row"><td colspan="3"><span class="spinner"></span></td></tr></tbody>
-      </table>
+    <!-- ═══ OVERVIEW ═══ -->
+    <div class="doc-panel active" id="panel-overview">
+      <div class="doc-page-head">
+        <div>
+          <h1 class="doc-h1">Bonjour Dr. Chopper</h1>
+          <p class="doc-subtitle" id="overview-subtitle">Chargement…</p>
+        </div>
+        <button class="btn-sm" onclick="loadAll()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          Actualiser
+        </button>
+      </div>
+
+      <div class="doc-stats">
+        <div class="doc-stat danger">
+          <div class="doc-stat-label">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            Alertes
+          </div>
+          <div class="doc-stat-n" id="st-alertes">–</div>
+          <div class="doc-stat-delta">non lues</div>
+        </div>
+        <div class="doc-stat">
+          <div class="doc-stat-label">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Patients suivis
+          </div>
+          <div class="doc-stat-n" id="st-patients">–</div>
+          <div class="doc-stat-delta">actifs</div>
+        </div>
+        <div class="doc-stat">
+          <div class="doc-stat-label">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+            Questionnaires
+          </div>
+          <div class="doc-stat-n" id="st-questionnaires">–</div>
+          <div class="doc-stat-delta">reçus</div>
+        </div>
+        <div class="doc-stat">
+          <div class="doc-stat-label">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            Photos
+          </div>
+          <div class="doc-stat-n" id="st-photos">–</div>
+          <div class="doc-stat-delta">à examiner</div>
+        </div>
+      </div>
+
+      <!-- Priority alerts -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div class="doc-section-title" style="margin:0;">Alertes prioritaires</div>
+        <button class="see-all" onclick="showSection('alerts')">
+          Tout voir
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:32px;" id="overview-alerts">
+        <div class="empty-state"><span class="spinner"></span></div>
+      </div>
+
+      <!-- Active patients -->
+      <div class="doc-section-title">Patients actifs</div>
+      <div class="doc-patients-grid" id="overview-patients">
+        <div class="empty-state"><span class="spinner"></span></div>
+      </div>
     </div>
-  </div>
 
+    <!-- ═══ ALERTS ═══ -->
+    <div class="doc-panel" id="panel-alerts">
+      <div class="doc-page-head">
+        <div>
+          <h1 class="doc-h1">Alertes</h1>
+          <p class="doc-subtitle" id="alerts-subtitle">Chargement…</p>
+        </div>
+      </div>
+      <div class="filter-pills" id="alert-filters">
+        <button class="filter-pill active" data-filter="all" onclick="setAlertFilter('all',this)">Toutes <span class="pill-count" id="fc-all">0</span></button>
+        <button class="filter-pill" data-filter="unread" onclick="setAlertFilter('unread',this)">Non lues <span class="pill-count" id="fc-unread">0</span></button>
+        <button class="filter-pill" data-filter="danger" onclick="setAlertFilter('danger',this)">Critiques <span class="pill-count" id="fc-danger">0</span></button>
+        <button class="filter-pill" data-filter="warning" onclick="setAlertFilter('warning',this)">Attention <span class="pill-count" id="fc-warning">0</span></button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;" id="alerts-list">
+        <div class="empty-state"><span class="spinner"></span></div>
+      </div>
+    </div>
+
+    <!-- ═══ PATIENTS ═══ -->
+    <div class="doc-panel" id="panel-patients">
+      <div class="doc-page-head">
+        <div>
+          <h1 class="doc-h1">Patients</h1>
+          <p class="doc-subtitle" id="patients-subtitle">Chargement…</p>
+        </div>
+        <div class="search-wrap">
+          <span class="search-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </span>
+          <input class="search-inp" type="text" placeholder="Rechercher un patient…" id="patient-search" oninput="filterPatients()" />
+        </div>
+      </div>
+      <div class="doc-patients-grid" id="patients-grid">
+        <div class="empty-state"><span class="spinner"></span></div>
+      </div>
+    </div>
+
+    <!-- ═══ QUESTIONNAIRES ═══ -->
+    <div class="doc-panel" id="panel-questionnaires">
+      <div class="doc-page-head">
+        <div>
+          <h1 class="doc-h1">Questionnaires</h1>
+          <p class="doc-subtitle" id="q-subtitle">Chargement…</p>
+        </div>
+      </div>
+
+      <!-- Desktop table -->
+      <div class="doc-table-wrap">
+        <table class="doc-table">
+          <thead>
+            <tr>
+              <th>Patient</th><th>Douleur</th><th>Temp.</th><th>Fatigue</th><th>Plaie</th><th>Risque</th><th>Reçu</th>
+            </tr>
+          </thead>
+          <tbody id="tb-questionnaires">
+            <tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-muted);"><span class="spinner"></span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Mobile cards -->
+      <div class="doc-card-list" id="q-cards"></div>
+    </div>
+
+    <!-- ═══ PHOTOS ═══ -->
+    <div class="doc-panel" id="panel-photos">
+      <div class="doc-page-head">
+        <div>
+          <h1 class="doc-h1">Photos</h1>
+          <p class="doc-subtitle" id="photos-subtitle">Chargement…</p>
+        </div>
+      </div>
+      <div class="doc-photos" id="photos-grid">
+        <div class="empty-state"><span class="spinner"></span></div>
+      </div>
+    </div>
+
+    <!-- ═══ MESSAGES ═══ -->
+    <div class="doc-panel" id="panel-messages">
+      <div class="doc-page-head">
+        <div>
+          <h1 class="doc-h1">Messages</h1>
+          <p class="doc-subtitle" id="msg-subtitle">Chargement…</p>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;" id="messages-list">
+        <div class="empty-state"><span class="spinner"></span></div>
+      </div>
+    </div>
+
+  </main>
 </div>
 
 <script>
-
-  
 var API = '/api';
+var currentSection = 'overview';
+var alertFilter = 'all';
+var allAlerts = [];
+var allPatients = [];
 
-function switchTab(id, btn) {
-  document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('active'); });
-  document.querySelectorAll('.tab').forEach(function(b){ b.classList.remove('active'); });
-  document.getElementById('panel-'+id).classList.add('active');
-  btn.classList.add('active');
+/* ── THEME ── */
+function toggleTheme() {
+  var html = document.documentElement;
+  var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  localStorage.setItem('postop_theme', next);
+  syncThemeIcons(next);
+}
+function syncThemeIcons(theme) {
+  var isDark = theme === 'dark';
+  var moonSVG = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+  var sunSVG = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+  var icon = isDark ? moonSVG : sunSVG;
+  ['theme-icon-mobile','theme-icon-sidebar'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.innerHTML = icon;
+  });
+  var lbl = document.getElementById('theme-label-sidebar');
+  if (lbl) lbl.textContent = isDark ? 'Mode clair' : 'Mode sombre';
+}
+(function() {
+  var saved = localStorage.getItem('postop_theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', saved);
+  syncThemeIcons(saved);
+})();
+
+/* ── SIDEBAR ── */
+function toggleSidebar() {
+  document.getElementById('doc-sidebar').classList.toggle('open');
+  document.getElementById('sidebar-backdrop').classList.toggle('show');
+}
+function closeSidebar() {
+  document.getElementById('doc-sidebar').classList.remove('open');
+  document.getElementById('sidebar-backdrop').classList.remove('show');
 }
 
+/* ── SECTION SWITCHING ── */
+function showSection(name) {
+  currentSection = name;
+  document.querySelectorAll('.doc-panel').forEach(function(p) { p.classList.remove('active'); });
+  document.querySelectorAll('.doc-side-link').forEach(function(l) { l.classList.remove('active'); });
+  var panel = document.getElementById('panel-' + name);
+  if (panel) panel.classList.add('active');
+  var nav = document.getElementById('nav-' + name);
+  if (nav) nav.classList.add('active');
+  closeSidebar();
+}
+
+/* ── DATE FORMAT ── */
 function fmtDate(iso) {
   if (!iso) return '–';
   var d = new Date(iso);
-  return d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'}) + ' ' +
-         d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  var today = new Date();
+  var diff = (today - d) / 86400000;
+  if (diff < 1) return 'Aujourd\'hui · ' + d.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+  if (diff < 2) return 'Hier · ' + d.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+  return d.toLocaleDateString('fr-FR', { day:'2-digit', month:'short' }) + ' · ' + d.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
 }
 
+/* ── BADGES HTML ── */
 function badgeNiveau(n) {
-  if (n==='danger') return '<span class="badge danger">🔴 Critique</span>';
-  if (n==='warning') return '<span class="badge warning">🟡 Attention</span>';
-  return '<span class="badge ok">🟢 Info</span>';
+  if (n === 'danger') return '<span class="badge danger">Critique</span>';
+  if (n === 'warning') return '<span class="badge warning">Attention</span>';
+  return '<span class="badge info">Info</span>';
 }
-
+function badgeDouleur(v) {
+  var t = v >= 4 ? 'danger' : v >= 3 ? 'warning' : 'success';
+  return '<span class="badge ' + t + '">' + v + '/5</span>';
+}
+function badgeFatigue(v) {
+  var t = v >= 4 ? 'danger' : v >= 3 ? 'warning' : 'success';
+  return '<span class="badge ' + t + '">' + v + '/5</span>';
+}
+function badgeTemp(t) {
+  if (t === 'elevee') return '<span class="badge danger">Élevée</span>';
+  if (t === 'normale') return '<span class="badge success">Normale</span>';
+  return '<span class="badge info">Incertaine</span>';
+}
+function badgePlaie(p) {
+  if (p === 'normale') return '<span class="badge success">Normale</span>';
+  if (p === 'rougeur') return '<span class="badge warning">Rougeur</span>';
+  return '<span class="badge danger">Écoulement</span>';
+}
 function badgeRisque(r) {
-  return r ? '<span class="badge danger">⚠️ Oui</span>' : '<span class="badge ok">✅ Non</span>';
+  if (r) return '<span class="badge danger">Oui</span>';
+  return '<span class="badge success">Non</span>';
 }
 
+/* ── ALERT ROW HTML ── */
+function alertRowHTML(r) {
+  var tone = r.niveau === 'danger' ? 'danger' : r.niveau === 'warning' ? 'warning' : 'info';
+  var dotHTML = !r.lu ? '<span class="alert-dot"></span>' : '';
+  var actionHTML = r.lu
+    ? '<span class="lu-done"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Lu</span>'
+    : '<button class="lu-btn" onclick="marquerLu(' + r.id + ')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Marquer lu</button>';
+  return '<div class="alert-row' + (r.lu ? ' read' : '') + '" id="alert-row-' + r.id + '">' +
+    '<div class="alert-bar ' + tone + '"></div>' +
+    '<div class="alert-body">' +
+      '<div class="alert-head">' +
+        '<span class="alert-patient">' + r.patient_nom + '</span>' +
+        badgeNiveau(r.niveau) +
+        dotHTML +
+      '</div>' +
+      '<div class="alert-msg">' + r.message + '</div>' +
+      '<div class="alert-date">' + fmtDate(r.date) + '</div>' +
+    '</div>' +
+    actionHTML +
+  '</div>';
+}
+
+/* ── PATIENT CARD HTML ── */
+function patientCardHTML(p) {
+  var initials = p.patient_nom ? p.patient_nom.split(' ').map(function(n) { return n[0]; }).join('') : '?';
+  var jBadge = p.jours_post_op !== undefined ? '<span class="badge info">J+' + p.jours_post_op + '</span>' : '';
+  return '<div class="doc-patient-card">' +
+    '<div class="doc-patient-head">' +
+      '<div class="doc-patient-avatar">' + initials + '</div>' +
+      '<div style="flex:1;min-width:0;">' +
+        '<div class="doc-patient-name">' + (p.patient_nom || '–') + '</div>' +
+        '<div class="doc-patient-op">' + (p.operation || '') + '</div>' +
+      '</div>' +
+    '</div>' +
+    '<div style="display:flex;gap:6px;flex-wrap:wrap;">' + jBadge + '</div>' +
+    '<div class="doc-patient-meta">' +
+      '<span>Email</span>' +
+      '<span style="color:var(--text);font-size:11px;">' + (p.email || '–') + '</span>' +
+    '</div>' +
+  '</div>';
+}
+
+/* ── LOAD STATS ── */
 async function loadStats() {
   try {
-    var res = await fetch(API+'/stats');
+    var res = await fetch(API + '/stats');
     var d = await res.json();
     document.getElementById('st-alertes').textContent = d.alertes_non_lues;
     document.getElementById('st-questionnaires').textContent = d.total_questionnaires;
     document.getElementById('st-photos').textContent = d.photos_recues;
-    document.getElementById('st-messages').textContent = d.messages_recus;
-    var badge = document.getElementById('badge-alert');
-    if (d.alertes_non_lues > 0) {
-      badge.style.display='inline-block';
-      badge.textContent = d.alertes_non_lues + ' alerte'+(d.alertes_non_lues>1?'s':'');
-    } else { badge.style.display='none'; }
+    document.getElementById('st-patients').textContent = d.total_patients !== undefined ? d.total_patients : '–';
+    var unread = d.alertes_non_lues || 0;
+    var badge = document.getElementById('alerts-badge');
+    var mobileBadge = document.getElementById('mobile-alert-badge');
+    if (unread > 0) {
+      badge.textContent = unread;
+      badge.style.display = 'flex';
+      mobileBadge.textContent = unread + ' alerte' + (unread > 1 ? 's' : '');
+      mobileBadge.style.display = 'inline-flex';
+    } else {
+      badge.style.display = 'none';
+      mobileBadge.style.display = 'none';
+    }
+    var date = new Date().toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long' });
+    document.getElementById('overview-subtitle').textContent =
+      'Vous avez ' + unread + ' alerte' + (unread > 1 ? 's' : '') + ' non lue' + (unread > 1 ? 's' : '') + ' · ' + date;
   } catch(e) {}
 }
 
+/* ── LOAD ALERTES ── */
 async function loadAlertes() {
-  var tb = document.getElementById('tb-alertes');
   try {
-    var res = await fetch(API+'/alertes');
-    var rows = await res.json();
-    document.getElementById('c-alertes').textContent = rows.length;
-    if (!rows.length) { tb.innerHTML = '<tr><td class="empty" colspan="5">Aucune alerte pour l\'instant.</td></tr>'; return; }
-    tb.innerHTML = rows.map(function(r){
-      return '<tr>' +
-        '<td><strong>'+r.patient_nom+'</strong></td>'+
-        '<td>'+badgeNiveau(r.niveau)+'</td>'+
-        '<td>'+r.message+'</td>'+
-        '<td style="white-space:nowrap;color:var(--grey)">'+fmtDate(r.date)+'</td>'+
-        '<td>'+(r.lu
-          ? '<span class="lu-badge">✓ Lu</span>'
-          : '<button class="lu-btn" onclick="marquerLu('+r.id+')">Marquer lu</button>'
-        )+'</td>'+
-      '</tr>';
-    }).join('');
-  } catch(e) { tb.innerHTML = '<tr><td class="empty" colspan="5">❌ Impossible de charger les alertes. Serveur démarré ?</td></tr>'; }
+    var res = await fetch(API + '/alertes');
+    allAlerts = await res.json();
+    renderAlerts();
+  } catch(e) {
+    document.getElementById('overview-alerts').innerHTML = '<div class="empty-state">Impossible de charger les alertes.</div>';
+    document.getElementById('alerts-list').innerHTML = '<div class="empty-state">Impossible de charger les alertes.</div>';
+  }
 }
+function renderAlerts() {
+  var unread = allAlerts.filter(function(a) { return !a.lu; });
+  var top = unread.slice(0, 3);
 
+  // Filter counts
+  document.getElementById('fc-all').textContent = allAlerts.length;
+  document.getElementById('fc-unread').textContent = unread.length;
+  document.getElementById('fc-danger').textContent = allAlerts.filter(function(a) { return a.niveau === 'danger'; }).length;
+  document.getElementById('fc-warning').textContent = allAlerts.filter(function(a) { return a.niveau === 'warning'; }).length;
+  document.getElementById('alerts-subtitle').textContent = unread.length + ' non lues · ' + allAlerts.length + ' au total';
+
+  // Overview alerts (top 3 unread)
+  var ov = document.getElementById('overview-alerts');
+  if (top.length === 0) {
+    ov.innerHTML = '<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:32px;text-align:center;color:var(--text-muted);font-size:14px;">Aucune alerte en attente</div>';
+  } else {
+    ov.innerHTML = top.map(alertRowHTML).join('');
+  }
+
+  // Full alerts list (filtered)
+  var filtered = allAlerts.filter(function(a) {
+    if (alertFilter === 'all') return true;
+    if (alertFilter === 'unread') return !a.lu;
+    return a.niveau === alertFilter;
+  });
+  var al = document.getElementById('alerts-list');
+  if (filtered.length === 0) {
+    al.innerHTML = '<div class="empty-state">Aucune alerte</div>';
+  } else {
+    al.innerHTML = filtered.map(alertRowHTML).join('');
+  }
+}
+function setAlertFilter(f, btn) {
+  alertFilter = f;
+  document.querySelectorAll('.filter-pill').forEach(function(p) { p.classList.remove('active'); });
+  btn.classList.add('active');
+  renderAlerts();
+}
 async function marquerLu(id) {
   try {
-    await fetch(API+'/alertes/'+id+'/lu', { method:'PATCH' });
-    loadAlertes(); loadStats();
+    await fetch(API + '/alertes/' + id + '/lu', { method: 'PATCH' });
+    allAlerts = allAlerts.map(function(a) { return a.id === id ? Object.assign({}, a, { lu: true }) : a; });
+    renderAlerts();
+    loadStats();
   } catch(e) {}
 }
 
-async function loadQuestionnaires() {
-  var tb = document.getElementById('tb-questionnaires');
+/* ── LOAD PATIENTS ── */
+async function loadPatients() {
   try {
-    var res = await fetch(API+'/questionnaires');
-    var rows = await res.json();
-    document.getElementById('c-q').textContent = rows.length;
-    if (!rows.length) { tb.innerHTML = '<tr><td class="empty" colspan="7">Aucun questionnaire reçu.</td></tr>'; return; }
-    tb.innerHTML = rows.map(function(r){
-      return '<tr>'+
-        '<td><strong>'+r.patient_nom+'</strong></td>'+
-        '<td><span class="badge '+(r.douleur>=4?'danger':r.douleur>=3?'warning':'ok')+'">'+(r.douleur||'–')+'/5</span></td>'+
-        '<td>'+(r.temperature==='elevee'?'<span class="badge danger">Élevée</span>':r.temperature==='normale'?'<span class="badge ok">Normale</span>':'<span class="badge info">Incertaine</span>')+'</td>'+
-        '<td><span class="badge '+(r.fatigue>=4?'danger':r.fatigue>=3?'warning':'ok')+'">'+(r.fatigue||'–')+'/5</span></td>'+
-        '<td>'+(r.plaie==='normale'?'<span class="badge ok">Normale</span>':r.plaie==='rougeur'?'<span class="badge warning">Rougeur</span>':'<span class="badge danger">Écoulement</span>')+'</td>'+
-        '<td>'+badgeRisque(r.est_risque)+'</td>'+
-        '<td style="white-space:nowrap;color:var(--grey)">'+fmtDate(r.date)+'</td>'+
-      '</tr>';
-    }).join('');
-  } catch(e) { tb.innerHTML = '<tr><td class="empty" colspan="7">❌ Impossible de charger les questionnaires.</td></tr>'; }
+    var res = await fetch(API + '/patients');
+    allPatients = await res.json();
+    renderPatients(allPatients);
+    // also populate overview patients grid
+    var op = document.getElementById('overview-patients');
+    if (allPatients.length === 0) {
+      op.innerHTML = '<div class="empty-state">Aucun patient</div>';
+    } else {
+      op.innerHTML = allPatients.slice(0, 6).map(patientCardHTML).join('');
+    }
+    document.getElementById('patients-subtitle').textContent = allPatients.length + ' patients en suivi actif';
+  } catch(e) {
+    // Patients endpoint may not exist yet — silent fail, overview still works from stats
+    document.getElementById('overview-patients').innerHTML = '<div class="empty-state" style="grid-column:1/-1;">Données patients non disponibles</div>';
+    document.getElementById('patients-subtitle').textContent = 'Données non disponibles';
+  }
+}
+function renderPatients(list) {
+  var grid = document.getElementById('patients-grid');
+  if (list.length === 0) {
+    grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;">Aucun patient trouvé</div>';
+  } else {
+    grid.innerHTML = list.map(patientCardHTML).join('');
+  }
+}
+function filterPatients() {
+  var q = document.getElementById('patient-search').value.toLowerCase();
+  var filtered = allPatients.filter(function(p) {
+    return (p.patient_nom || '').toLowerCase().includes(q) || (p.email || '').toLowerCase().includes(q);
+  });
+  renderPatients(filtered);
 }
 
+/* ── LOAD QUESTIONNAIRES ── */
+async function loadQuestionnaires() {
+  var tb = document.getElementById('tb-questionnaires');
+  var cards = document.getElementById('q-cards');
+  try {
+    var res = await fetch(API + '/questionnaires');
+    var rows = await res.json();
+    document.getElementById('q-subtitle').textContent = rows.length + ' questionnaires reçus';
+    if (rows.length === 0) {
+      tb.innerHTML = '<tr><td colspan="7" class="empty-state">Aucun questionnaire reçu.</td></tr>';
+      cards.innerHTML = '<div class="empty-state">Aucun questionnaire reçu.</div>';
+      return;
+    }
+    // Desktop table
+    tb.innerHTML = rows.map(function(r) {
+      return '<tr>' +
+        '<td><strong style="font-weight:600;">' + r.patient_nom + '</strong></td>' +
+        '<td>' + badgeDouleur(r.douleur) + '</td>' +
+        '<td>' + badgeTemp(r.temperature) + '</td>' +
+        '<td>' + badgeFatigue(r.fatigue) + '</td>' +
+        '<td>' + badgePlaie(r.plaie) + '</td>' +
+        '<td>' + badgeRisque(r.est_risque) + '</td>' +
+        '<td style="color:var(--text-muted);font-size:12.5px;white-space:nowrap;">' + fmtDate(r.date) + '</td>' +
+      '</tr>';
+    }).join('');
+    // Mobile cards
+    cards.innerHTML = rows.map(function(r) {
+      var initials = r.patient_nom ? r.patient_nom.split(' ').map(function(n) { return n[0]; }).join('') : '?';
+      var risqueBadge = r.est_risque ? '<span class="badge danger">Risque</span>' : '';
+      return '<div class="doc-row-card">' +
+        '<div class="doc-row-head">' +
+          '<div class="doc-row-avatar">' + initials + '</div>' +
+          '<div style="flex:1;">' +
+            '<div class="doc-row-name">' + r.patient_nom + '</div>' +
+            '<div class="doc-row-date">' + fmtDate(r.date) + '</div>' +
+          '</div>' +
+          risqueBadge +
+        '</div>' +
+        '<div class="doc-row-grid">' +
+          '<div class="doc-row-cell"><div class="doc-row-cell-lbl">Douleur</div><div class="doc-row-cell-val">' + r.douleur + '/5</div></div>' +
+          '<div class="doc-row-cell"><div class="doc-row-cell-lbl">Fatigue</div><div class="doc-row-cell-val">' + r.fatigue + '/5</div></div>' +
+          '<div class="doc-row-cell"><div class="doc-row-cell-lbl">Temp.</div><div class="doc-row-cell-val">' + (r.temperature === 'elevee' ? 'Élevée' : 'Normale') + '</div></div>' +
+          '<div class="doc-row-cell"><div class="doc-row-cell-lbl">Plaie</div><div class="doc-row-cell-val">' + (r.plaie === 'normale' ? 'Normale' : r.plaie === 'rougeur' ? 'Rougeur' : 'Écoul.') + '</div></div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  } catch(e) {
+    tb.innerHTML = '<tr><td colspan="7" class="empty-state">Impossible de charger les questionnaires.</td></tr>';
+  }
+}
+
+/* ── LOAD PHOTOS ── */
 async function loadPhotos() {
   var grid = document.getElementById('photos-grid');
   try {
-    var res = await fetch(API+'/photos');
+    var res = await fetch(API + '/photos');
     var rows = await res.json();
-    document.getElementById('c-photos').textContent = rows.length;
-    if (!rows.length) { grid.innerHTML = '<p style="color:var(--grey);font-size:.88rem;padding:2rem">Aucune photo reçue.</p>'; return; }
-    grid.innerHTML = rows.map(function(r){
-      return '<div class="photo-card">'+
-        '<img src="/uploads/'+r.fichier+'" alt="Plaie '+r.patient_nom+'" loading="lazy">'+
-        '<div class="photo-info">'+
-          '<strong>'+r.patient_nom+'</strong>'+
-          '<span>'+fmtDate(r.date)+'</span>'+
-          (r.message ? '<div class="photo-msg">"'+r.message+'"</div>' : '')+
-        '</div>'+
+    document.getElementById('photos-subtitle').textContent = rows.length + ' photos reçues à examiner';
+    if (rows.length === 0) {
+      grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;">Aucune photo reçue.</div>';
+      return;
+    }
+    grid.innerHTML = rows.map(function(r) {
+      var imgHTML = r.fichier
+        ? '<img src="/uploads/' + r.fichier + '" alt="Plaie ' + r.patient_nom + '" loading="lazy">'
+        : '<div style="position:relative;z-index:1;font-size:10.5px;color:var(--text-muted);text-align:center;padding:8px;">photo plaie<br>placeholder</div>';
+      var msgHTML = r.message
+        ? '<div class="doc-photo-msg">"' + r.message + '"</div>'
+        : '';
+      return '<div class="doc-photo-card">' +
+        '<div class="doc-photo-img">' + imgHTML + '</div>' +
+        '<div class="doc-photo-body">' +
+          '<div class="doc-photo-name">' + r.patient_nom + '</div>' +
+          '<div class="doc-photo-date">' + fmtDate(r.date) + '</div>' +
+          msgHTML +
+        '</div>' +
       '</div>';
     }).join('');
-  } catch(e) { grid.innerHTML = '<p style="color:var(--grey);font-size:.88rem;padding:2rem">❌ Impossible de charger les photos.</p>'; }
+  } catch(e) {
+    grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;">Impossible de charger les photos.</div>';
+  }
 }
 
+/* ── LOAD MESSAGES ── */
 async function loadMessages() {
-  var tb = document.getElementById('tb-messages');
+  var list = document.getElementById('messages-list');
   try {
-    var res = await fetch(API+'/messages');
+    var res = await fetch(API + '/messages');
     var rows = await res.json();
-    document.getElementById('c-messages').textContent = rows.length;
-    if (!rows.length) { tb.innerHTML = '<tr><td class="empty" colspan="3">Aucun message reçu.</td></tr>'; return; }
-    tb.innerHTML = rows.map(function(r){
-      return '<tr>'+
-        '<td style="white-space:nowrap"><strong>'+r.patient_nom+'</strong></td>'+
-        '<td>'+r.contenu+'</td>'+
-        '<td style="white-space:nowrap;color:var(--grey)">'+fmtDate(r.date)+'</td>'+
-      '</tr>';
+    document.getElementById('msg-subtitle').textContent = rows.length + ' messages reçus';
+    if (rows.length === 0) {
+      list.innerHTML = '<div class="empty-state">Aucun message reçu.</div>';
+      return;
+    }
+    list.innerHTML = rows.map(function(r) {
+      var initials = r.patient_nom ? r.patient_nom.split(' ').map(function(n) { return n[0]; }).join('') : '?';
+      return '<div class="doc-msg-card">' +
+        '<div style="display:flex;gap:12px;">' +
+          '<div class="doc-msg-avatar">' + initials + '</div>' +
+          '<div style="flex:1;min-width:0;">' +
+            '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:5px;">' +
+              '<div style="font-size:14px;font-weight:600;">' + r.patient_nom + '</div>' +
+              '<div style="font-size:11.5px;color:var(--text-muted);">' + fmtDate(r.date) + '</div>' +
+            '</div>' +
+            '<div style="font-size:13.5px;color:var(--text-mid);line-height:1.55;margin-bottom:10px;">' + r.contenu + '</div>' +
+            '<button class="btn-sm">' +
+              '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>' +
+              'Répondre' +
+            '</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
     }).join('');
-  } catch(e) { tb.innerHTML = '<tr><td class="empty" colspan="3">❌ Impossible de charger les messages.</td></tr>'; }
+  } catch(e) {
+    list.innerHTML = '<div class="empty-state">Impossible de charger les messages.</div>';
+  }
 }
 
+/* ── LOAD ALL ── */
 async function loadAll() {
-  document.getElementById('last-update').textContent = 'Actualisation…';
-  await Promise.all([loadStats(), loadAlertes(), loadQuestionnaires(), loadPhotos(), loadMessages()]);
-  document.getElementById('last-update').textContent = 'Dernière mise à jour : ' + new Date().toLocaleTimeString('fr-FR');
+  await Promise.all([loadStats(), loadAlertes(), loadPatients(), loadQuestionnaires(), loadPhotos(), loadMessages()]);
 }
 
 // Chargement initial + auto-refresh toutes les 30s
